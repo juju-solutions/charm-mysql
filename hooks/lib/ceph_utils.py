@@ -9,6 +9,7 @@
 #
 
 import commands
+import json
 import subprocess
 import os
 import shutil
@@ -66,16 +67,37 @@ def pool_exists(service, name):
     return name in out
 
 
-def create_pool(service, name):
-    cmd = [
-        'rados',
-        '--id',
-        service,
-        'mkpool',
-        name
-        ]
-    execute(cmd)
+def get_osds(service):
+    '''
+    Return a list of all Ceph Object Storage Daemons
+    currently in the cluster
+    '''
+    return json.loads(subprocess.check_output(['ceph', '--id', service,
+                                               'osd', 'ls', '--format=json']))
 
+def create_pool(service, name, replicas=2):
+    ''' Create a new RADOS pool '''
+    if pool_exists(service, name):
+        utils.juju_log('WARNING',
+                       "Ceph pool {} already exists, "
+                       "skipping creation".format(name))
+        return
+
+    # Calculate the number of placement groups based
+    # on upstream recommended best practices.
+    pgnum = (len(get_osds(service)) * 100 / replicas)
+    cmd = [
+        'ceph', '--id', service,
+        'osd', 'pool', 'create',
+        name, str(pgnum)
+    ]
+    subprocess.check_call(cmd)
+    cmd = [
+        'ceph', '--id', service,
+        'osd', 'pool', 'set', name,
+        'size', str(replicas)
+    ]
+    subprocess.check_call(cmd)
 
 def keyfile_path(service):
     return KEYFILE % service
@@ -220,7 +242,8 @@ def copy_files(src, dst, symlinks=False, ignore=None):
 
 
 def ensure_ceph_storage(service, pool, rbd_img, sizemb, mount_point,
-                        blk_device, fstype, system_services=[]):
+                        blk_device, fstype, system_services=[],
+                        rbd_pool_replicas=2):
     """
     To be called from the current cluster leader.
     Ensures given pool and RBD image exists, is mapped to a block device,
@@ -235,7 +258,7 @@ def ensure_ceph_storage(service, pool, rbd_img, sizemb, mount_point,
     # Ensure pool, RBD image, RBD mappings are in place.
     if not pool_exists(service, pool):
         utils.juju_log('INFO', 'ceph: Creating new pool %s.' % pool)
-        create_pool(service, pool)
+        create_pool(service, pool, replicas=rbd_pool_replicas)
 
     if not rbd_exists(service, pool, rbd_img):
         utils.juju_log('INFO', 'ceph: Creating RBD image (%s).' % rbd_img)

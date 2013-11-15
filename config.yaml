@@ -67,3 +67,13 @@ options:
           The name that will be used to create the Ceph's RBD image with. If the
           image name exists in Ceph, it will be re-used and the data will be
           overwritten.
+    ceph-osd-replication-count:
+        default: 2
+        type: int
+        description: |
+            This value dictates the number of replicas ceph must make of any
+            object it stores within the mysql rbd pool. Of course, this only
+            applies if using Ceph as a backend store. Note that once the mysql
+            rbd pool has been created, changing this value will not have any
+            effect (although it can be changed in ceph by manually configuring
+            your ceph cluster).
