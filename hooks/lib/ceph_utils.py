@@ -67,13 +67,32 @@ def pool_exists(service, name):
     return name in out
 
 
+def ceph_version():
+    ''' Retrieve the local version of ceph '''
+    if os.path.exists('/usr/bin/ceph'):
+        cmd = ['ceph', '-v']
+        output = subprocess.check_output(cmd)
+        output = output.split()
+        if len(output) > 3:
+            return output[2]
+        else:
+            return None
+    else:
+        return None
+
+
 def get_osds(service):
     '''
     Return a list of all Ceph Object Storage Daemons
     currently in the cluster
     '''
-    return json.loads(subprocess.check_output(['ceph', '--id', service,
-                                               'osd', 'ls', '--format=json']))
+    version = ceph_version()
+    if version and version >= '0.56':
+        cmd = ['ceph', '--id', service, 'osd', 'ls', '--format=json']
+        return json.loads(subprocess.check_output(cmd))
+    else:
+        return None
+
 
 def create_pool(service, name, replicas=2):
     ''' Create a new RADOS pool '''
@@ -83,9 +102,14 @@ def create_pool(service, name, replicas=2):
                        "skipping creation".format(name))
         return
 
-    # Calculate the number of placement groups based
-    # on upstream recommended best practices.
-    pgnum = (len(get_osds(service)) * 100 / replicas)
+    osds = get_osds(service)
+    if osds:
+        pgnum = (len(osds) * 100 / replicas)
+    else:
+        # NOTE(james-page): Default to 200 for older ceph versions
+        # which don't support OSD query from cli
+        pgnum = 200
+
     cmd = [
         'ceph', '--id', service,
         'osd', 'pool', 'create',
@@ -98,6 +122,7 @@ def create_pool(service, name, replicas=2):
         'size', str(replicas)
     ]
     subprocess.check_call(cmd)
+
 
 def keyfile_path(service):
     return KEYFILE % service
