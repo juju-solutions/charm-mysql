@@ -6,7 +6,7 @@ This charm also can deploy [Percona Server](http://www.percona.com/software/perc
 
 # Usage
 
-## Usage
+## General Usage
 
 To deploy a MySQL service:
 
@@ -17,7 +17,37 @@ Once deployed, you can retrive the MySQL root user password by logging in to the
     juju ssh mysql/0
     mysql -u root -p=`cat /var/lib/mysql/mysql.passwd`
 
-### Configuration
+# Scale Out Usage 
+
+## Replication
+
+MySQL supports the ability to replicate databases to slave instances. This
+allows you, for example, to load balance read queries across multiple slaves or
+use a slave to perform backups, all whilst not impeding the master's
+performance.
+
+To deploy a slave:
+
+    # deploy second service
+    juju deploy mysql mysql-slave
+
+    # add master to slave relation
+    juju add-relation mysql:master mysql-slave:slave
+
+Any changes to the master are reflected on the slave.
+
+Any queries that modify the database(s) should be applied to the master only.
+The slave should be treated strictly as read only.
+
+You can add further slaves with:
+
+    juju add-unit mysql-slave
+
+## Monitoring
+
+This charm provides relations that support monitoring via either [Nagios](https://jujucharms.com/precise/nagios) or [Munin](https://jujucharms.com/precise/munin/). Refer to the appropriate charm for usage.
+
+# Configuration
 
 You can tweak various options to optimize your MySQL deployment:
 
@@ -60,41 +90,7 @@ Deploying Percona Server is an option in this charm, you can do so by editing th
 
 WARNING: Migrating from MySQL to Percona Server in this fashion is currently a one-way migration, once you migrate you cannot migrate back via Juju. 
 
-## Scale Out Usage 
-
-### Replication
-
-MySQL supports the ability to replicate databases to slave instances. This
-allows you, for example, to load balance read queries across multiple slaves or
-use a slave to perform backups, all whilst not impeding the master's
-performance.
-
-To deploy a slave:
-
-    # deploy second service
-    juju deploy mysql mysql-slave
-
-    # add master to slave relation
-    juju add-relation mysql:master mysql-slave:slave
-
-Any changes to the master are reflected on the slave.
-
-Any queries that modify the database(s) should be applied to the master only.
-The slave should be treated strictly as read only.
-
-You can add further slaves with:
-
-    juju add-unit mysql-slave
-
-### Monitoring
-
-This charm provides relations that support monitoring via either [Nagios](https://jujucharms.com/precise/nagios) or [Munin](https://jujucharms.com/precise/munin/). Refer to the appropriate charm for usage.
-
-## Contact Information
-
-Though this will be listed in the charm store itself don't assume a user will know that, so include that information here:
-
-### MySQL and Percona Server Contact Information
+# MySQL and Percona Server Contact Information
 
 - [MySQL Homepage](http://www.mysql.com)
 - [MySQL Bug Tracker](http://bugs.mysql.com/)
