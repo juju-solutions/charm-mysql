@@ -1,37 +1,23 @@
 # Overview
 
-MySQL is a fast, stable and true multi-user, multi-threaded SQL database server.
-SQL (Structured Query Language) is the most popular database query language in
-the world. The main goals of MySQL are speed, robustness and ease of use.
+[MySQL](http://www.mysql.com) is a fast, stable and true multi-user, multi-threaded SQL database server. SQL (Structured Query Language) is the most popular database query language in the world. The main goals of MySQL are speed, robustness and ease of use.
 
-Percona is fork of MySQL by Percona Inc. which focuses on maximizing
-performance, particularly for heavy workloads. It is a drop-in replacement for
-MySQL and features XtraDB, a drop-in replacement for the InnoDB storage engine.
-
-[http://www.mysql.com](http://www.mysql.com)
-
-[http://www.percona.com/software/percona-server](http://www.percona.com/software/percona-server)
+This charm also can deploy [Percona Server](http://www.percona.com/software/percona-server) is fork of MySQL by Percona Inc. which focuses on maximizing performance, particularly for heavy workloads. It is a drop-in replacement for MySQL and features XtraDB, a drop-in replacement for the InnoDB storage engine.
 
 # Usage
 
-## General
+## Usage
 
 To deploy a MySQL service:
 
     juju deploy mysql
 
-Once deployed, you can retrive the MySQL root user password by logging in to the machine via `juju ssh`
-and readin the `/var/lib/mysql/mysql.passwd` file. To log in as root MySQL User at the MySQL console
-you can issue the following:
+Once deployed, you can retrive the MySQL root user password by logging in to the machine via `juju ssh` and readin the `/var/lib/mysql/mysql.passwd` file. To log in as root MySQL User at the MySQL console you can issue the following:
 
     juju ssh mysql/0
     mysql -u root -p=`cat /var/lib/mysql/mysql.passwd`
 
-To change deployment to a Percona server:
-
-    juju set mysql flavor=percona
-
-## Optimization
+### Configuration
 
 You can tweak various options to optimize your MySQL deployment:
 
@@ -68,7 +54,15 @@ e.g.
     juju set mysql query-cache-type=ON
     juju set mysql query-cache-size=-1
 
-## Replication
+Deploying Percona Server is an option in this charm, you can do so by editing the `flavor` option:
+
+    juju set mysql flavor=percona
+
+WARNING: Migrating from MySQL to Percona Server in this fashion is currently a one-way migration, once you migrate you cannot migrate back via Juju. 
+
+## Scale Out Usage 
+
+### Replication
 
 MySQL supports the ability to replicate databases to slave instances. This
 allows you, for example, to load balance read queries across multiple slaves or
@@ -92,7 +86,18 @@ You can add further slaves with:
 
     juju add-unit mysql-slave
 
-## Monitoring
+### Monitoring
 
-This charm provides relations that support monitoring via either Nagios or
-Munin. Refer to the appropriate charm for usage.
+This charm provides relations that support monitoring via either [Nagios](https://jujucharms.com/precise/nagios) or [Munin](https://jujucharms.com/precise/munin/). Refer to the appropriate charm for usage.
+
+## Contact Information
+
+Though this will be listed in the charm store itself don't assume a user will know that, so include that information here:
+
+### MySQL and Percona Server Contact Information
+
+- [MySQL Homepage](http://www.mysql.com)
+- [MySQL Bug Tracker](http://bugs.mysql.com/)
+- [Percona Server Homepage](http://www.percona.com/software/percona-server)
+- [Percona Server Bug Tracker](https://bugs.launchpad.net/percona-server/)
+- [MySQL mailing lists](http://lists.mysql.com/)
