@@ -33,6 +33,7 @@ options:
         description: If binlogging is enabled, this is the format that will be used. Ignored when tuning-level == fast.
     vip:
         type: string
+        default: ''
         description: "Virtual IP to use to front mysql in ha configuration"
     vip_iface:
         type: string
