@@ -316,7 +316,7 @@ binlog_format = %s
 """
 
     binlog_cnf = binlog_template % (unit_id,
-        configs.get('binlog_format','MIXED'))
+        configs.get('binlog-format','MIXED'))
 
 mycnf=template % configs
 
