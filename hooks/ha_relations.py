@@ -110,11 +110,13 @@ def ceph_changed():
         sizemb = int(utils.config_get('block-size')) * 1024
         rbd_img = utils.config_get('rbd-name')
         blk_device = '/dev/rbd/%s/%s' % (POOL_NAME, rbd_img)
+        rbd_pool_rep_count = utils.config_get('ceph-osd-replication-count')
         ceph.ensure_ceph_storage(service=SERVICE_NAME, pool=POOL_NAME,
                                  rbd_img=rbd_img, sizemb=sizemb,
                                  fstype='ext4', mount_point=DATA_SRC_DST,
                                  blk_device=blk_device,
-                                 system_services=['mysql'])
+                                 system_services=['mysql'],
+                                 rbd_pool_replicas=rbd_pool_rep_count)
     else:
         utils.juju_log('INFO',
                        'This is not the peer leader. Not configuring RBD.')
