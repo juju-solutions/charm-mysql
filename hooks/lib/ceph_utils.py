@@ -23,9 +23,9 @@ CEPH_CONF = """[global]
  auth supported = %(auth)s
  keyring = %(keyring)s
  mon host = %(mon_hosts)s
- log to syslog = %s(use_syslog)s
- err to syslog = %s(use_syslog)s
- clog to syslog = %s(use_syslog)s
+ log to syslog = %(use_syslog)s
+ err to syslog = %(use_syslog)s
+ clog to syslog = %(use_syslog)s
 """
 
 
