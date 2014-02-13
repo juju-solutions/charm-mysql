@@ -100,11 +100,13 @@ def ceph_changed():
     utils.juju_log('INFO', 'Start Ceph Relation Changed')
     auth = utils.relation_get('auth')
     key = utils.relation_get('key')
+    use_syslog = utils.relation_get('use_syslog')
     if None in [auth, key]:
         utils.juju_log('INFO', 'Missing key or auth in relation')
         return
 
-    ceph.configure(service=SERVICE_NAME, key=key, auth=auth)
+    ceph.configure(service=SERVICE_NAME, key=key, auth=auth,
+                   use_syslog=use_syslog)
 
     if cluster.eligible_leader(LEADER_RES):
         sizemb = int(utils.config_get('block-size')) * 1024

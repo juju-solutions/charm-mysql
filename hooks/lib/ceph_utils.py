@@ -23,6 +23,9 @@ CEPH_CONF = """[global]
  auth supported = %(auth)s
  keyring = %(keyring)s
  mon host = %(mon_hosts)s
+ log to syslog = %s(use_syslog)s
+ err to syslog = %s(use_syslog)s
+ clog to syslog = %s(use_syslog)s
 """
 
 
@@ -167,7 +170,7 @@ def get_ceph_nodes():
     return hosts
 
 
-def configure(service, key, auth):
+def configure(service, key, auth, use_syslog):
     create_keyring(service, key)
     create_key_file(service, key)
     hosts = get_ceph_nodes()
