@@ -14,6 +14,7 @@ from charmhelpers.fetch import (
 
 # Add archive source of provided
 add_source(utils.config_get('source'), utils.config_get('key'))
+apt_update()
 
 # Pre-exec
 if os.path.isdir('exec.d'):
@@ -29,7 +30,9 @@ if os.path.isdir('exec.d'):
             utils.juju_log('ERROR', str(exc))
             sys.exit(1)
 
-apt_update()
+    # Update again in case any pre-exec script(s) modified sources.
+    apt_update()
+
 apt_install(['debconf-utils', 'python-mysqldb', 'uuid', 'pwgen', 'dnsutils',
              'charm-helper-sh'])
 
