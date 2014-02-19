@@ -72,9 +72,29 @@ options:
         default: 2
         type: int
         description: |
-            This value dictates the number of replicas ceph must make of any
-            object it stores within the mysql rbd pool. Of course, this only
-            applies if using Ceph as a backend store. Note that once the mysql
-            rbd pool has been created, changing this value will not have any
-            effect (although it can be changed in ceph by manually configuring
-            your ceph cluster).
+          This value dictates the number of replicas ceph must make of any
+          object it stores within the mysql rbd pool. Of course, this only
+          applies if using Ceph as a backend store. Note that once the mysql
+          rbd pool has been created, changing this value will not have any
+          effect (although it can be changed in ceph by manually configuring
+          your ceph cluster).
+    openstack-origin:
+        default: distro
+        type: string
+        description: |
+          Repository from which to install 'cloud' packages.
+
+          NOTE: this applies to 'cloud' packages and not mysql itself. It
+          is intended to allow newer versions of packages like the Ceph RBD
+          client, used in this charm, to be installed.
+
+          Values may be one of the following; distro (default),
+          ppa:somecustom/ppa, a deb url sources entry, or a supported Cloud
+          Archive release pocket i.e. one of cloud:precise-<flavour>/updates,
+          cloud:precise-<flavour>/staging, cloud:precise-<flavour>/proposed
+          where <flavour> can be folsom, grizzly, havana etc.
+
+          Note that updating this setting to a source that is known to provide a
+          later version of Openstack/cloud packages will trigger a software
+          upgrade.
+
