@@ -10,7 +10,10 @@ import sys
 import platform
 import lib.utils as utils
 from string import upper
-from charmhelpers.fetch import add_source
+from charmhelpers.fetch import (
+    add_source,
+    apt_update
+)
 
 
 # Add archive source if provided
