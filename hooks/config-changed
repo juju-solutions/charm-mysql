@@ -8,8 +8,13 @@ import hashlib
 import os
 import sys
 import platform
+import lib.utils as utils
 from string import upper
+from charmhelpers.fetch import add_source
 
+
+# Add archive source of provided
+add_source(utils.config_get('source'), utils.config_get('key'))
 
 num_re = re.compile('^[0-9]+$')
 
