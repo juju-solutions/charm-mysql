@@ -9,9 +9,7 @@ import os
 import sys
 import platform
 from string import upper
-import lib.utils as utils
 
-utils.configure_source()
 
 num_re = re.compile('^[0-9]+$')
 

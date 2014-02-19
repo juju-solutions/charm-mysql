@@ -60,63 +60,6 @@ def render_template(template_name, context, template_dir=TEMPLATES_DIR):
     template = templates.get_template(template_name)
     return template.render(context)
 
-CLOUD_ARCHIVE = \
-""" # Ubuntu Cloud Archive
-deb http://ubuntu-cloud.archive.canonical.com/ubuntu {} main
-"""
-
-CLOUD_ARCHIVE_POCKETS = {
-    'folsom': 'precise-updates/folsom',
-    'folsom/updates': 'precise-updates/folsom',
-    'folsom/proposed': 'precise-proposed/folsom',
-    'grizzly': 'precise-updates/grizzly',
-    'grizzly/updates': 'precise-updates/grizzly',
-    'grizzly/proposed': 'precise-proposed/grizzly',
-    'havana': 'precise-updates/havana',
-    'havana/updates': 'precise-updates/havana',
-    'havana/proposed': 'precise-proposed/havana'
-    }
-
-
-def configure_source():
-    source = str(config_get('openstack-origin'))
-    if not source:
-        return
-    if source.startswith('ppa:'):
-        cmd = [
-            'add-apt-repository',
-            source
-            ]
-        subprocess.check_call(cmd)
-    if source.startswith('cloud:'):
-        # CA values should be formatted as cloud:ubuntu-openstack/pocket, eg:
-        #   cloud:precise-folsom/updates or cloud:precise-folsom/proposed
-        install('ubuntu-cloud-keyring')
-        pocket = source.split(':')[1]
-        pocket = pocket.split('-')[1]
-        with open('/etc/apt/sources.list.d/cloud-archive.list', 'w') as apt:
-            apt.write(CLOUD_ARCHIVE.format(CLOUD_ARCHIVE_POCKETS[pocket]))
-    if source.startswith('deb'):
-        l = len(source.split('|'))
-        if l == 2:
-            (apt_line, key) = source.split('|')
-            cmd = [
-                'apt-key',
-                'adv', '--keyserver keyserver.ubuntu.com',
-                '--recv-keys', key
-                ]
-            subprocess.check_call(cmd)
-        elif l == 1:
-            apt_line = source
-
-        with open('/etc/apt/sources.list.d/quantum.list', 'w') as apt:
-            apt.write(apt_line + "\n")
-    cmd = [
-        'apt-get',
-        'update'
-        ]
-    subprocess.check_call(cmd)
-
 # Protocols
 TCP = 'TCP'
 UDP = 'UDP'
