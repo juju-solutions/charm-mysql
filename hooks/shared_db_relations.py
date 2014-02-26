@@ -53,7 +53,7 @@ def shared_db_changed():
             password = pwgen()
             with open(passwd_file, 'w') as pfile:
                 pfile.write(password)
-		os.chmod(pfile.name, 0600)
+                os.chmod(pfile.name, 0600)
         else:
             with open(passwd_file) as pfile:
                 password = pfile.read().strip()
