@@ -32,8 +32,7 @@ def install(*pkgs):
     cmd = [
         'apt-get',
         '-y',
-        'install'
-          ]
+        'install']
     for pkg in pkgs:
         cmd.append(pkg)
     subprocess.check_call(cmd)
@@ -54,9 +53,8 @@ except ImportError:
 
 
 def render_template(template_name, context, template_dir=TEMPLATES_DIR):
-    templates = jinja2.Environment(
-                    loader=jinja2.FileSystemLoader(template_dir)
-                    )
+    templates = jinja2.Environment(loader=jinja2.FileSystemLoader(
+                                   template_dir))
     template = templates.get_template(template_name)
     return template.render(context)
 
@@ -68,8 +66,7 @@ UDP = 'UDP'
 def expose(port, protocol='TCP'):
     cmd = [
         'open-port',
-        '{}/{}'.format(port, protocol)
-        ]
+        '{}/{}'.format(port, protocol)]
     subprocess.check_call(cmd)
 
 
@@ -77,16 +74,14 @@ def juju_log(severity, message):
     cmd = [
         'juju-log',
         '--log-level', severity,
-        message
-        ]
+        message]
     subprocess.check_call(cmd)
 
 
 def relation_ids(relation):
     cmd = [
         'relation-ids',
-        relation
-        ]
+        relation]
     result = str(subprocess.check_output(cmd)).split()
     if result == "":
         return None
@@ -97,8 +92,7 @@ def relation_ids(relation):
 def relation_list(rid):
     cmd = [
         'relation-list',
-        '-r', rid,
-        ]
+        '-r', rid]
     result = str(subprocess.check_output(cmd)).split()
     if result == "":
         return None
@@ -108,8 +102,7 @@ def relation_list(rid):
 
 def relation_get(attribute, unit=None, rid=None):
     cmd = [
-        'relation-get',
-        ]
+        'relation-get']
     if rid:
         cmd.append('-r')
         cmd.append(rid)
@@ -125,8 +118,7 @@ def relation_get(attribute, unit=None, rid=None):
 
 def relation_set(**kwargs):
     cmd = [
-        'relation-set'
-        ]
+        'relation-set']
     args = []
     for k, v in kwargs.items():
         if k == 'rid':
@@ -142,8 +134,7 @@ def relation_set(**kwargs):
 def unit_get(attribute):
     cmd = [
         'unit-get',
-        attribute
-        ]
+        attribute]
     value = subprocess.check_output(cmd).strip()  # IGNORE:E1103
     if value == "":
         return None
@@ -155,8 +146,7 @@ def config_get(attribute):
     cmd = [
         'config-get',
         '--format',
-        'json',
-        ]
+        'json']
     out = subprocess.check_output(cmd).strip()  # IGNORE:E1103
     cfg = json.loads(out)
 
@@ -217,8 +207,7 @@ def running(service):
     except subprocess.CalledProcessError:
         return False
     else:
-        if ("start/running" in output or
-            "is running" in output):
+        if ("start/running" in output or "is running" in output):
             return True
         else:
             return False

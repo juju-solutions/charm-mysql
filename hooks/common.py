@@ -1,10 +1,9 @@
 # vim: syntax=python
 
 import os
-import sys
 import MySQLdb
 import subprocess
-import uuid
+
 
 def get_service_user_file(service):
     return '/var/lib/mysql/%s.service_user2' % service
@@ -17,7 +16,8 @@ def get_service_user(service):
     if os.path.exists(sfile):
         with open(sfile, 'r') as f:
             return (f.readline().strip(), f.readline().strip())
-    (suser, service_password) = subprocess.check_output(['pwgen', '-N 2', '15']).strip().split("\n")
+    (suser, service_password) = \
+        subprocess.check_output(['pwgen', '-N 2', '15']).strip().split("\n")
     with open(sfile, 'w') as f:
         f.write("%s\n" % suser)
         f.write("%s\n" % service_password)
@@ -49,12 +49,13 @@ else:
 # A user per service unit so we can deny access quickly
 user, service_password = get_service_user(database_name)
 connection = None
-lastrun_path = '/var/lib/juju/%s.%s.lastrun' % (database_name,user)
+lastrun_path = '/var/lib/juju/%s.%s.lastrun' % (database_name, user)
 slave_configured_path = '/var/lib/juju.slave.configured.for.%s' % database_name
 slave_configured = os.path.exists(slave_configured_path)
 slave = os.path.exists('/var/lib/juju/i.am.a.slave')
 broken_path = '/var/lib/juju/%s.mysql.broken' % database_name
 broken = os.path.exists(broken_path)
+
 
 def get_db_cursor():
     # Connect to mysql
@@ -99,7 +100,7 @@ def create_grant(db_name, db_user,
                  remote_ip, password):
     cursor = get_db_cursor()
     try:
-        cursor.execute("GRANT ALL PRIVILEGES ON {}.* TO '{}'@'{}' "\
+        cursor.execute("GRANT ALL PRIVILEGES ON {}.* TO '{}'@'{}' "
                        "IDENTIFIED BY '{}'".format(db_name,
                                                    db_user,
                                                    remote_ip,
@@ -112,7 +113,7 @@ def cleanup_grant(db_user,
                   remote_ip):
     cursor = get_db_cursor()
     try:
-        cursor.execute("DROP FROM mysql.user WHERE user='{}' "\
+        cursor.execute("DROP FROM mysql.user WHERE user='{}' "
                        "AND HOST='{}'".format(db_user,
                                               remote_ip))
     finally:
