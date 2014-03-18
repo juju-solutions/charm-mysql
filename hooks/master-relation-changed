@@ -4,7 +4,7 @@
 
 set -e
 
-. /usr/share/charm-helper/sh/net.sh
+. $CHARM_DIR/lib/net.sh
 
 ROOTARGS="-uroot -p`cat /var/lib/mysql/mysql.passwd`"
 snapdir=/var/www/snaps
