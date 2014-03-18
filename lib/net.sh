@@ -167,6 +167,11 @@ ch_get_ip()
 	local HOST="$1"
 	#So, if there's multiple IP addresses, just grab the first
 	# for now.
+	if [ `ch_is_ip "$HOST"` ]; then
+		echo "$HOST"
+		return 0
+	fi
+
 	local CHECK_IP=$(host -t A $HOST | awk 'NR==1{ print $4 }')
 
 	if [ ! `ch_is_ip "$CHECK_IP"` ]; then
