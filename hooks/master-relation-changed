@@ -2,7 +2,7 @@
 #
 # Master side of master/slave replication
 
-set -e
+set -ex
 
 . $CHARM_DIR/lib/net.sh
 
@@ -78,7 +78,7 @@ changed)
                          port=3306
     ;;
 departed)
-    mysql $ROOTARGS -e "REVOKE REPLICATION SLAVE, REPLICATION CLIENT ON *.* FROM `$user`@`$remote_ip`"
+    mysql $ROOTARGS -e "REVOKE REPLICATION SLAVE, REPLICATION CLIENT ON *.* FROM \`$user\`@\`$remote_ip\`"
     ;;
 broken)
     # XXX Need some way to tie users to relation ID
