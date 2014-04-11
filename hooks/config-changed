@@ -119,6 +119,8 @@ QUERY_CACHE_SIZE_FACTOR = (dataset_bytes * 0.20)
 if query_cache_size <= 0:
     if configs['query-cache-type'] in ('ON','DEMAND', ):
         query_cache_size = int(QUERY_CACHE_SIZE_FACTOR - (QUERY_CACHE_SIZE_FACTOR % PAGE_SIZE))
+    else:
+        query_cache_size = 0
 
 configs['query-cache-size'] = query_cache_size
 
