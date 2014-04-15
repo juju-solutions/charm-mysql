@@ -112,11 +112,17 @@ dataset_bytes = human_to_bytes(configs['dataset-size'])
 
 check_call(['juju-log','-l','INFO','dataset size in bytes: %d' % dataset_bytes])
 
-if configs['query-cache-size'] == -1 and configs['query-cache-type'] in ['ON','DEMAND']:
-    qcache_bytes = (dataset_bytes * 0.20)
-    qcache_bytes = int(qcache_bytes - (qcache_bytes % PAGE_SIZE))
-    configs['query-cache-size'] = qcache_bytes
-    dataset_bytes -= qcache_bytes
+query_cache_size = configs.get('query-cache-size', 0)
+
+QUERY_CACHE_SIZE_FACTOR = (dataset_bytes * 0.20)
+
+if query_cache_size <= 0:
+    if configs['query-cache-type'] in ('ON','DEMAND', ):
+        query_cache_size = int(QUERY_CACHE_SIZE_FACTOR - (QUERY_CACHE_SIZE_FACTOR % PAGE_SIZE))
+    else:
+        query_cache_size = 0
+
+configs['query-cache-size'] = query_cache_size
 
 # 5.5 allows the words, but not 5.1
 if configs['query-cache-type'] == 'ON':
@@ -127,7 +133,8 @@ else:
     configs['query-cache-type']=0
 
 preferred_engines=configs['preferred-storage-engine'].split(',')
-chunk_size = int(dataset_bytes / len(preferred_engines))
+
+chunk_size = int((dataset_bytes - query_cache_size)/len(preferred_engines))
 configs['innodb-flush-log-at-trx-commit']=1
 configs['sync-binlog']=1
 if 'InnoDB' in preferred_engines:
@@ -171,7 +178,7 @@ template="""
 # You can copy this to one of:
 # - "/etc/mysql/my.cnf" to set global options,
 # - "~/.my.cnf" to set user-specific options.
-# 
+#
 # One can use all long options that the program supports.
 # Run program with --help to get a list of available options and with
 # --print-defaults to see which it would actually understand and use.
@@ -332,7 +339,7 @@ targets = {'/etc/mysql/conf.d/binlog.cnf': binlog_cnf,
 
 need_restart = False
 for target,content in targets.iteritems():
-    tdir = os.path.dirname(target) 
+    tdir = os.path.dirname(target)
     if len(content) == 0 and os.path.exists(target):
         os.unlink(target)
         need_restart = True
