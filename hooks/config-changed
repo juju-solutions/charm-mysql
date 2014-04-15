@@ -281,7 +281,13 @@ skip-name-resolve
 # ssl-cert=/etc/mysql/server-cert.pem
 # ssl-key=/etc/mysql/server-key.pem
 
-
+#
+# * Encoding
+#
+# Set all the tables to utf8 by default.
+collation-server = utf8_general_ci
+init-connect='SET NAMES utf8'
+character-set-server = utf8
 
 [mysqldump]
 quick
