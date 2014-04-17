@@ -90,6 +90,25 @@ Deploying Percona Server is an option in this charm, you can do so by editing th
 
 WARNING: Migrating from MySQL to Percona Server in this fashion is currently a one-way migration, once you migrate you cannot migrate back via Juju. 
 
+To change the source that the charm uses for packages:
+
+  juju set mysql source="cloud:precise-icehouse"
+
+This will enable the Icehouse pocket of the Cloud Archive and upgrade the install of any 'cloud' packages to the new version.
+
+The source option can be used in a few different ways:
+
+  source="ppa:james-page/testing" - use the testing PPA owned by james-page
+  source="http://myrepo/ubuntu main" - use the repository located at the provided URL
+
+The charm also supports use of arbitary archive key's for use with private repositories:
+
+  juju set mysql key="C6CEA0C9"
+
+Note that in clustered configurations, the upgrade can be a bit racey as the services restart and re-cluster; this is resolvable using:
+
+  juju resolved --retry mysql/1
+
 # MySQL and Percona Server Contact Information
 
 - [MySQL Homepage](http://www.mysql.com)
