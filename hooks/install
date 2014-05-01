@@ -18,8 +18,6 @@ apt_update()
 
 # Pre-exec
 if os.path.isdir('exec.d'):
-    check_output(['shopt', '-s', 'nullglob'])
-    
     for f in glob.glob("exec.d/*/charm-pre-install"):
         if not os.access(f, os.X_OK):
             continue
