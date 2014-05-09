@@ -380,4 +380,4 @@ if need_restart:
         check_call(['service', 'mysql', 'restart'])
 if relations_of_type('nrpe-external-master'):
     import nrpe_relations
-    nrpe_relations.update_nrpe_checks()
+    nrpe_relations.nrpe_relation()
