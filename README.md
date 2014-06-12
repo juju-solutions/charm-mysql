@@ -109,6 +109,13 @@ Note that in clustered configurations, the upgrade can be a bit racey as the ser
 
   juju resolved --retry mysql/1
 
+# Caveats 
+
+When deploying MySQL on the local provider, there is a known memory exhaustion issue. To work around this until the issue is patched:
+
+    juju set mysql dataset-size='512M'
+    juju resolved -r mysql/#
+
 # MySQL and Percona Server Contact Information
 
 - [MySQL Homepage](http://www.mysql.com)
