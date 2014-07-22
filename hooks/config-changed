@@ -12,7 +12,8 @@ import lib.utils as utils
 from string import upper
 from charmhelpers.fetch import (
     add_source,
-    apt_update
+    apt_update,
+    apt_install
 )
 
 
@@ -115,7 +116,7 @@ dconf.wait()
 
 if len(remove_pkgs):
     check_call(['apt-get','-y','remove'] + remove_pkgs)
-check_call(['apt-get','-y','install','-qq',package])
+apt_install(package)
 
 # smart-calc stuff in the configs
 dataset_bytes = human_to_bytes(configs['dataset-size'])
