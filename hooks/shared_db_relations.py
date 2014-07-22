@@ -12,8 +12,7 @@ from common import (
     database_exists,
     create_database,
     grant_exists,
-    create_grant
-    )
+    create_grant)
 import subprocess
 import json
 import socket
@@ -29,12 +28,9 @@ def pwgen():
 
 
 def relation_get():
-    return json.loads(subprocess.check_output(
-                        ['relation-get',
-                         '--format',
-                         'json']
-                        )
-                      )
+    return json.loads(subprocess.check_output(['relation-get',
+                                               '--format',
+                                               'json']))
 
 
 def shared_db_changed():
@@ -42,8 +38,7 @@ def shared_db_changed():
     def configure_db(hostname,
                      database,
                      username):
-        passwd_file = "/var/lib/mysql/mysql-{}.passwd"\
-                        .format(username)
+        passwd_file = "/var/lib/mysql/mysql-{}.passwd".format(username)
         if hostname != local_hostname:
             remote_ip = socket.gethostbyname(hostname)
         else:
@@ -53,6 +48,7 @@ def shared_db_changed():
             password = pwgen()
             with open(passwd_file, 'w') as pfile:
                 pfile.write(password)
+                os.chmod(pfile.name, 0600)
         else:
             with open(passwd_file) as pfile:
                 password = pfile.read().strip()
@@ -78,8 +74,7 @@ def shared_db_changed():
     singleset = set([
         'database',
         'username',
-        'hostname'
-        ])
+        'hostname'])
 
     if singleset.issubset(settings):
         # Process a single database configuration
@@ -133,8 +128,6 @@ def shared_db_changed():
         else:
             utils.relation_set(db_host=utils.config_get("vip"))
 
-hooks = {
-    "shared-db-relation-changed": shared_db_changed
-    }
+hooks = {"shared-db-relation-changed": shared_db_changed}
 
 utils.do_hooks(hooks)

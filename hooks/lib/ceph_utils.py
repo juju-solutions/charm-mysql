@@ -45,7 +45,7 @@ def install():
 
 
 def rbd_exists(service, pool, rbd_img):
-    (rc, out) = commands.getstatusoutput('rbd list --id %s --pool %s' %\
+    (rc, out) = commands.getstatusoutput('rbd list --id %s --pool %s' %
                                          (service, pool))
     return rbd_img in out
 
@@ -60,8 +60,7 @@ def create_rbd_image(service, pool, image, sizemb):
         '--id',
         service,
         '--pool',
-        pool
-        ]
+        pool]
     execute(cmd)
 
 
@@ -144,8 +143,7 @@ def create_keyring(service, key):
         keyring,
         '--create-keyring',
         '--name=client.%s' % service,
-        '--add-key=%s' % key
-        ]
+        '--add-key=%s' % key]
     execute(cmd)
     utils.juju_log('INFO', 'ceph: Created new ring at %s.' % keyring)
 
@@ -194,8 +192,7 @@ def map_block_storage(service, pool, image):
         '--user',
         service,
         '--secret',
-        keyfile_path(service),
-        ]
+        keyfile_path(service)]
     execute(cmd)
 
 
@@ -208,17 +205,16 @@ def make_filesystem(blk_device, fstype='ext4'):
     e_noent = os.errno.ENOENT
     while not os.path.exists(blk_device):
         if count >= 10:
-            utils.juju_log('ERROR',
-                'ceph: gave up waiting on block device %s' % blk_device)
+            utils.juju_log('ERROR', 'ceph: gave up waiting on block '
+                                    'device %s' % blk_device)
             raise IOError(e_noent, os.strerror(e_noent), blk_device)
-        utils.juju_log('INFO',
-            'ceph: waiting for block device %s to appear' % blk_device)
+        utils.juju_log('INFO', 'ceph: waiting for block device %s '
+                               'to appear' % blk_device)
         count += 1
         time.sleep(1)
     else:
-        utils.juju_log('INFO',
-            'ceph: Formatting block device %s as filesystem %s.' %
-            (blk_device, fstype))
+        utils.juju_log('INFO', 'ceph: Formatting block device %s '
+                               'as filesystem %s.' % (blk_device, fstype))
         execute(['mkfs', '-t', fstype, blk_device])
 
 
@@ -309,7 +305,7 @@ def ensure_ceph_storage(service, pool, rbd_img, sizemb, mount_point,
         for svc in system_services:
             if utils.running(svc):
                 utils.juju_log('INFO',
-                               'Stopping services %s prior to migrating '\
+                               'Stopping services %s prior to migrating '
                                'data' % svc)
                 utils.stop(svc)
 

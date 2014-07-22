@@ -27,9 +27,7 @@ def ha_relation_joined():
         sys.exit(1)
 
     # Starting configuring resources.
-    init_services = {
-            'res_mysqld': 'mysql',
-        }
+    init_services = {'res_mysqld': 'mysql'}
 
     # If the 'ha' relation has been made *before* the 'ceph' relation,
     # it doesn't make sense to make it until after the 'ceph' relation is made
@@ -48,26 +46,23 @@ def ha_relation_joined():
             'res_mysql_rbd': 'ocf:ceph:rbd',
             'res_mysql_fs': 'ocf:heartbeat:Filesystem',
             'res_mysql_vip': 'ocf:heartbeat:IPaddr2',
-            'res_mysqld': 'upstart:mysql',
-            }
+            'res_mysqld': 'upstart:mysql'}
 
         rbd_name = utils.config_get('rbd-name')
         resource_params = {
             'res_mysql_rbd': 'params name="%s" pool="%s" user="%s" '
-                             'secret="%s"' % \
+                             'secret="%s"' %
                              (rbd_name, POOL_NAME,
                               SERVICE_NAME, ceph.keyfile_path(SERVICE_NAME)),
             'res_mysql_fs': 'params device="/dev/rbd/%s/%s" directory="%s" '
-                            'fstype="ext4" op start start-delay="10s"' % \
+                            'fstype="ext4" op start start-delay="10s"' %
                             (POOL_NAME, rbd_name, DATA_SRC_DST),
-            'res_mysql_vip': 'params ip="%s" cidr_netmask="%s" nic="%s"' % \
+            'res_mysql_vip': 'params ip="%s" cidr_netmask="%s" nic="%s"' %
                              (vip, vip_cidr, vip_iface),
-            'res_mysqld': 'op start start-delay="5s" op monitor interval="5s"',
-            }
+            'res_mysqld': 'op start start-delay="5s" op monitor interval="5s"'}
 
         groups = {
-            'grp_mysql': 'res_mysql_rbd res_mysql_fs res_mysql_vip res_mysqld',
-            }
+            'grp_mysql': 'res_mysql_rbd res_mysql_fs res_mysql_vip res_mysqld'}
 
         for rel_id in utils.relation_ids('ha'):
             utils.relation_set(rid=rel_id,
