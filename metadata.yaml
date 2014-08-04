@@ -24,6 +24,9 @@ provides:
   local-monitors:
     interface: local-monitors
     scope: container
+  nrpe-external-master:
+    interface: nrpe-external-master
+    scope: container
 peers:
   cluster:
     interface: mysql-ha
