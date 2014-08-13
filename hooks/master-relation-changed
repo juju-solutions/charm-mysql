@@ -10,6 +10,7 @@ ROOTARGS="-uroot -p`cat /var/lib/mysql/mysql.passwd`"
 snapdir=/var/www/snaps
 mkdir -p $snapdir
 apt-get -y install apache2
+APACHE_VERSION=`dpkg-query -W -f='${Version}\n' apache2 | cut -c1-3`
 # disable wide-open access (restrict to each db IP)
 rhosts=""
 remote_ip=""
@@ -31,7 +32,11 @@ done
 rhosts=${rhosts##,}
 
 # if there are no hosts, we simply disable all access
-target=/etc/apache2/sites-available/mysql-dumps
+if [ "$APACHE_VERSION" = "2.2" ] ; then
+	target=/etc/apache2/sites-available/mysql-dumps
+else
+	target=/etc/apache2/sites-available/mysql-dumps.conf
+fi
 cat > $target <<EOF
 DocumentRoot /var/www
 <Directory /var/www>
@@ -48,7 +53,11 @@ cat >> $target <<EOF
 </Directory>
 EOF
 a2ensite mysql-dumps
-a2dissite default
+if [ "$APACHE_VERSION" = "2.2" ] ; then
+        a2dissite default
+else
+        a2dissite 000-default
+fi
 service apache2 reload
 
 pass=`pwgen -s 16`
