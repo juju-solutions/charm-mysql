@@ -15,6 +15,7 @@ from charmhelpers.fetch import (
     apt_update,
     apt_install
 )
+from charmhelpers.core.hookenv import relations_of_type
 
 
 # Add archive source if provided
@@ -378,3 +379,6 @@ if need_restart:
     except CalledProcessError:
         check_call(['juju-log', '-l', 'INFO', 'Restart failed, trying again'])
         check_call(['service', 'mysql', 'restart'])
+if relations_of_type('nrpe-external-master'):
+    import nrpe_relations
+    nrpe_relations.nrpe_relation()
