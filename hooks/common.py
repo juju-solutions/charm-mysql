@@ -84,6 +84,7 @@ def create_database(db_name):
 
 def grant_exists(db_name, db_user, remote_ip):
     cursor = get_db_cursor()
+    priv_string="GRANT ALL PRIVILEGES ON `{}`.* TO '{}'@'{}'".format(db_name, db_user, remote_ip)
     try:
         cursor.execute("SHOW GRANTS for '{}'@'{}'".format(db_user,
                                                           remote_ip))
@@ -93,7 +94,7 @@ def grant_exists(db_name, db_user, remote_ip):
         return False
     finally:
         cursor.close()
-    return "GRANT ALL PRIVILEGES ON `{}`".format(db_name) in grants
+    return priv_string in grants
 
 
 def create_grant(db_name, db_user,
