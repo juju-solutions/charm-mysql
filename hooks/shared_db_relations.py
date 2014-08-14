@@ -43,11 +43,11 @@ def get_unit_addr(relid, unitid):
 
 def shared_db_changed():
 
-    def get_allowed_units():
+    def get_allowed_units(database, username):
         allowed_units = set()
         for relid in hookenv.relation_ids('shared-db'):
             for unit in hookenv.related_units(relid):
-                if grant_exists(settings['database'], settings['username'], get_unit_addr(relid, unit)):
+                if grant_exists(database, username, get_unit_addr(relid, unit)):
                     allowed_units.add(unit)
         return allowed_units
 
@@ -97,7 +97,9 @@ def shared_db_changed():
         password = configure_db(settings['hostname'],
                                 settings['database'],
                                 settings['username'])
-        allowed_units = " ".join(unit_sorted(get_allowed_units()))
+        allowed_units = " ".join(unit_sorted(get_allowed_units(
+            settings['database'],
+            settings['username'])))
         if not cluster.is_clustered():
             utils.relation_set(db_host=local_hostname,
                                password=password,
@@ -134,20 +136,23 @@ def shared_db_changed():
                 databases[db] = {}
             databases[db][x] = v
         return_data = {}
+        allowed_units = []
         for db in databases:
             if singleset.issubset(databases[db]):
                 return_data['_'.join([db, 'password'])] = \
                     configure_db(databases[db]['hostname'],
                                  databases[db]['database'],
                                  databases[db]['username'])
-        allowed_units = " ".join(unit_sorted(get_allowed_units()))
-        return_data['allowed_units'] = allowed_units
+                return_data['_'.join([db, 'allowed_units'])] = \
+                    " ".join(unit_sorted(get_allowed_units(
+                        settings['database'],
+                        settings['username'])))
         if len(return_data) > 0:
             utils.relation_set(**return_data)
         if not cluster.is_clustered():
-            utils.relation_set(db_host=local_hostname, allowed_units=allowed_units)
+            utils.relation_set(db_host=local_hostname)
         else:
-            utils.relation_set(db_host=utils.config_get("vip"), allowed_units=allowed_units)
+            utils.relation_set(db_host=utils.config_get("vip"))
 
 hooks = {"shared-db-relation-changed": shared_db_changed}
 
