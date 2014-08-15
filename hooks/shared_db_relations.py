@@ -33,13 +33,18 @@ def relation_get():
                                                '--format',
                                                'json']))
 
+
 def unit_sorted(units):
     """Return a sorted list of unit names."""
     return sorted(
         units, lambda a, b: cmp(int(a.split('/')[-1]), int(b.split('/')[-1])))
 
+
 def get_unit_addr(relid, unitid):
-    return hookenv.relation_get(attribute='private-address', unit=unitid, rid=relid)
+    return hookenv.relation_get(attribute='private-address',
+                                unit=unitid,
+                                rid=relid)
+
 
 def shared_db_changed():
 
@@ -47,7 +52,9 @@ def shared_db_changed():
         allowed_units = set()
         for relid in hookenv.relation_ids('shared-db'):
             for unit in hookenv.related_units(relid):
-                if grant_exists(database, username, get_unit_addr(relid, unit)):
+                if grant_exists(database,
+                                username,
+                                get_unit_addr(relid, unit)):
                     allowed_units.add(unit)
         return allowed_units
 
