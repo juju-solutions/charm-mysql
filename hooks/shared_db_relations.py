@@ -152,8 +152,8 @@ def shared_db_changed():
                                  databases[db]['username'])
                 return_data['_'.join([db, 'allowed_units'])] = \
                     " ".join(unit_sorted(get_allowed_units(
-                        settings['database'],
-                        settings['username'])))
+                        databases[db]['database'],
+                        databases[db]['username'])))
         if len(return_data) > 0:
             utils.relation_set(**return_data)
         if not cluster.is_clustered():
