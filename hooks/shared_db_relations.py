@@ -122,7 +122,7 @@ def shared_db_changed():
         #  nova_database=xxx nova_username=xxx nova_hostname=xxx
         #  quantum_database=xxx quantum_username=xxx quantum_hostname=xxx
         # create
-        #{
+        # {
         #   "nova": {
         #        "username": xxx,
         #        "database": xxx,
@@ -133,7 +133,7 @@ def shared_db_changed():
         #        "database": xxx,
         #        "hostname": xxx
         #    }
-        #}
+        # }
         #
         databases = {}
         for k, v in settings.iteritems():
