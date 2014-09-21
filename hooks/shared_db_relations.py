@@ -20,6 +20,9 @@ import os
 import lib.utils as utils
 import lib.cluster_utils as cluster
 from charmhelpers.core import hookenv
+from charmhelpers.contrib.network.ip import (
+    get_ipv6_addr
+)
 
 LEADER_RES = 'res_mysql_vip'
 
@@ -98,6 +101,9 @@ def shared_db_changed():
         'database',
         'username',
         'hostname'])
+
+    if utils.config_get('prefer-ipv6'):
+        local_hostname = get_ipv6_addr()[0]
 
     if singleset.issubset(settings):
         # Process a single database configuration
