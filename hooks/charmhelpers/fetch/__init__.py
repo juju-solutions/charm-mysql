@@ -1,4 +1,6 @@
 import importlib
+from tempfile import NamedTemporaryFile
+import time
 from yaml import safe_load
 from charmhelpers.core.host import (
     lsb_release
@@ -12,8 +14,8 @@ from charmhelpers.core.hookenv import (
     config,
     log,
 )
-import apt_pkg
 import os
+
 
 CLOUD_ARCHIVE = """# Ubuntu Cloud Archive
 deb http://ubuntu-cloud.archive.canonical.com/ubuntu {} main
@@ -54,13 +56,68 @@ CLOUD_ARCHIVE_POCKETS = {
     'icehouse/proposed': 'precise-proposed/icehouse',
     'precise-icehouse/proposed': 'precise-proposed/icehouse',
     'precise-proposed/icehouse': 'precise-proposed/icehouse',
+    # Juno
+    'juno': 'trusty-updates/juno',
+    'trusty-juno': 'trusty-updates/juno',
+    'trusty-juno/updates': 'trusty-updates/juno',
+    'trusty-updates/juno': 'trusty-updates/juno',
+    'juno/proposed': 'trusty-proposed/juno',
+    'juno/proposed': 'trusty-proposed/juno',
+    'trusty-juno/proposed': 'trusty-proposed/juno',
+    'trusty-proposed/juno': 'trusty-proposed/juno',
 }
+
+# The order of this list is very important. Handlers should be listed in from
+# least- to most-specific URL matching.
+FETCH_HANDLERS = (
+    'charmhelpers.fetch.archiveurl.ArchiveUrlFetchHandler',
+    'charmhelpers.fetch.bzrurl.BzrUrlFetchHandler',
+)
+
+APT_NO_LOCK = 100  # The return code for "couldn't acquire lock" in APT.
+APT_NO_LOCK_RETRY_DELAY = 10  # Wait 10 seconds between apt lock checks.
+APT_NO_LOCK_RETRY_COUNT = 30  # Retry to acquire the lock X times.
+
+
+class SourceConfigError(Exception):
+    pass
+
+
+class UnhandledSource(Exception):
+    pass
+
+
+class AptLockError(Exception):
+    pass
+
+
+class BaseFetchHandler(object):
+
+    """Base class for FetchHandler implementations in fetch plugins"""
+
+    def can_handle(self, source):
+        """Returns True if the source can be handled. Otherwise returns
+        a string explaining why it cannot"""
+        return "Wrong source type"
+
+    def install(self, source):
+        """Try to download and unpack the source. Return the path to the
+        unpacked files or raise UnhandledSource."""
+        raise UnhandledSource("Wrong source type {}".format(source))
+
+    def parse_url(self, url):
+        return urlparse(url)
+
+    def base_url(self, url):
+        """Return url without querystring or fragment"""
+        parts = list(self.parse_url(url))
+        parts[4:] = ['' for i in parts[4:]]
+        return urlunparse(parts)
 
 
 def filter_installed_packages(packages):
     """Returns a list of packages that require installation"""
-    apt_pkg.init()
-    cache = apt_pkg.Cache()
+    cache = apt_cache()
     _pkgs = []
     for package in packages:
         try:
@@ -71,6 +128,16 @@ def filter_installed_packages(packages):
                 level='WARNING')
             _pkgs.append(package)
     return _pkgs
+
+
+def apt_cache(in_memory=True):
+    """Build and return an apt cache"""
+    import apt_pkg
+    apt_pkg.init()
+    if in_memory:
+        apt_pkg.config.set("Dir::Cache::pkgcache", "")
+        apt_pkg.config.set("Dir::Cache::srcpkgcache", "")
+    return apt_pkg.Cache()
 
 
 def apt_install(packages, options=None, fatal=False):
@@ -87,14 +154,7 @@ def apt_install(packages, options=None, fatal=False):
         cmd.extend(packages)
     log("Installing {} with options: {}".format(packages,
                                                 options))
-    env = os.environ.copy()
-    if 'DEBIAN_FRONTEND' not in env:
-        env['DEBIAN_FRONTEND'] = 'noninteractive'
-
-    if fatal:
-        subprocess.check_call(cmd, env=env)
-    else:
-        subprocess.call(cmd, env=env)
+    _run_apt_command(cmd, fatal)
 
 
 def apt_upgrade(options=None, fatal=False, dist=False):
@@ -109,24 +169,13 @@ def apt_upgrade(options=None, fatal=False, dist=False):
     else:
         cmd.append('upgrade')
     log("Upgrading with options: {}".format(options))
-
-    env = os.environ.copy()
-    if 'DEBIAN_FRONTEND' not in env:
-        env['DEBIAN_FRONTEND'] = 'noninteractive'
-
-    if fatal:
-        subprocess.check_call(cmd, env=env)
-    else:
-        subprocess.call(cmd, env=env)
+    _run_apt_command(cmd, fatal)
 
 
 def apt_update(fatal=False):
     """Update local apt cache"""
     cmd = ['apt-get', 'update']
-    if fatal:
-        subprocess.check_call(cmd)
-    else:
-        subprocess.call(cmd)
+    _run_apt_command(cmd, fatal)
 
 
 def apt_purge(packages, fatal=False):
@@ -137,10 +186,7 @@ def apt_purge(packages, fatal=False):
     else:
         cmd.extend(packages)
     log("Purging {}".format(packages))
-    if fatal:
-        subprocess.check_call(cmd)
-    else:
-        subprocess.call(cmd)
+    _run_apt_command(cmd, fatal)
 
 
 def apt_hold(packages, fatal=False):
@@ -151,6 +197,7 @@ def apt_hold(packages, fatal=False):
     else:
         cmd.extend(packages)
     log("Holding {}".format(packages))
+
     if fatal:
         subprocess.check_call(cmd)
     else:
@@ -158,6 +205,27 @@ def apt_hold(packages, fatal=False):
 
 
 def add_source(source, key=None):
+    """Add a package source to this system.
+
+    @param source: a URL or sources.list entry, as supported by
+    add-apt-repository(1). Examples:
+        ppa:charmers/example
+        deb https://stub:key@private.example.com/ubuntu trusty main
+
+    In addition:
+        'proposed:' may be used to enable the standard 'proposed'
+        pocket for the release.
+        'cloud:' may be used to activate official cloud archive pockets,
+        such as 'cloud:icehouse'
+
+    @param key: A key to be added to the system's APT keyring and used
+    to verify the signatures on packages. Ideally, this should be an
+    ASCII format GPG public key including the block headers. A GPG key
+    id may also be used, but be aware that only insecure protocols are
+    available to retrieve the actual public key from a public keyserver
+    placing your Juju environment at risk. ppa and cloud archive keys
+    are securely added automtically, so sould not be provided.
+    """
     if source is None:
         log('Source is not present. Skipping')
         return
@@ -182,58 +250,65 @@ def add_source(source, key=None):
         release = lsb_release()['DISTRIB_CODENAME']
         with open('/etc/apt/sources.list.d/proposed.list', 'w') as apt:
             apt.write(PROPOSED_POCKET.format(release))
+    else:
+        raise SourceConfigError("Unknown source: {!r}".format(source))
+
     if key:
-        subprocess.check_call(['apt-key', 'adv', '--keyserver',
-                               'hkp://keyserver.ubuntu.com:80', '--recv',
-                               key])
-
-
-class SourceConfigError(Exception):
-    pass
+        if '-----BEGIN PGP PUBLIC KEY BLOCK-----' in key:
+            with NamedTemporaryFile() as key_file:
+                key_file.write(key)
+                key_file.flush()
+                key_file.seek(0)
+                subprocess.check_call(['apt-key', 'add', '-'], stdin=key_file)
+        else:
+            # Note that hkp: is in no way a secure protocol. Using a
+            # GPG key id is pointless from a security POV unless you
+            # absolutely trust your network and DNS.
+            subprocess.check_call(['apt-key', 'adv', '--keyserver',
+                                   'hkp://keyserver.ubuntu.com:80', '--recv',
+                                   key])
 
 
 def configure_sources(update=False,
                       sources_var='install_sources',
                       keys_var='install_keys'):
     """
-    Configure multiple sources from charm configuration
+    Configure multiple sources from charm configuration.
+
+    The lists are encoded as yaml fragments in the configuration.
+    The frament needs to be included as a string. Sources and their
+    corresponding keys are of the types supported by add_source().
 
     Example config:
-        install_sources:
+        install_sources: |
           - "ppa:foo"
           - "http://example.com/repo precise main"
-        install_keys:
+        install_keys: |
           - null
           - "a1b2c3d4"
 
     Note that 'null' (a.k.a. None) should not be quoted.
     """
-    sources = safe_load(config(sources_var))
-    keys = config(keys_var)
-    if keys is not None:
-        keys = safe_load(keys)
-    if isinstance(sources, basestring) and (
-            keys is None or isinstance(keys, basestring)):
-        add_source(sources, keys)
+    sources = safe_load((config(sources_var) or '').strip()) or []
+    keys = safe_load((config(keys_var) or '').strip()) or None
+
+    if isinstance(sources, basestring):
+        sources = [sources]
+
+    if keys is None:
+        for source in sources:
+            add_source(source, None)
     else:
-        if not len(sources) == len(keys):
-            msg = 'Install sources and keys lists are different lengths'
-            raise SourceConfigError(msg)
-        for src_num in range(len(sources)):
-            add_source(sources[src_num], keys[src_num])
+        if isinstance(keys, basestring):
+            keys = [keys]
+
+        if len(sources) != len(keys):
+            raise SourceConfigError(
+                'Install sources and keys lists are different lengths')
+        for source, key in zip(sources, keys):
+            add_source(source, key)
     if update:
         apt_update(fatal=True)
-
-# The order of this list is very important. Handlers should be listed in from
-# least- to most-specific URL matching.
-FETCH_HANDLERS = (
-    'charmhelpers.fetch.archiveurl.ArchiveUrlFetchHandler',
-    'charmhelpers.fetch.bzrurl.BzrUrlFetchHandler',
-)
-
-
-class UnhandledSource(Exception):
-    pass
 
 
 def install_remote(source):
@@ -265,30 +340,6 @@ def install_from_config(config_var_name):
     return install_remote(source)
 
 
-class BaseFetchHandler(object):
-
-    """Base class for FetchHandler implementations in fetch plugins"""
-
-    def can_handle(self, source):
-        """Returns True if the source can be handled. Otherwise returns
-        a string explaining why it cannot"""
-        return "Wrong source type"
-
-    def install(self, source):
-        """Try to download and unpack the source. Return the path to the
-        unpacked files or raise UnhandledSource."""
-        raise UnhandledSource("Wrong source type {}".format(source))
-
-    def parse_url(self, url):
-        return urlparse(url)
-
-    def base_url(self, url):
-        """Return url without querystring or fragment"""
-        parts = list(self.parse_url(url))
-        parts[4:] = ['' for i in parts[4:]]
-        return urlunparse(parts)
-
-
 def plugins(fetch_handlers=None):
     if not fetch_handlers:
         fetch_handlers = FETCH_HANDLERS
@@ -306,3 +357,40 @@ def plugins(fetch_handlers=None):
             log("FetchHandler {} not found, skipping plugin".format(
                 handler_name))
     return plugin_list
+
+
+def _run_apt_command(cmd, fatal=False):
+    """
+    Run an APT command, checking output and retrying if the fatal flag is set
+    to True.
+
+    :param: cmd: str: The apt command to run.
+    :param: fatal: bool: Whether the command's output should be checked and
+        retried.
+    """
+    env = os.environ.copy()
+
+    if 'DEBIAN_FRONTEND' not in env:
+        env['DEBIAN_FRONTEND'] = 'noninteractive'
+
+    if fatal:
+        retry_count = 0
+        result = None
+
+        # If the command is considered "fatal", we need to retry if the apt
+        # lock was not acquired.
+
+        while result is None or result == APT_NO_LOCK:
+            try:
+                result = subprocess.check_call(cmd, env=env)
+            except subprocess.CalledProcessError, e:
+                retry_count = retry_count + 1
+                if retry_count > APT_NO_LOCK_RETRY_COUNT:
+                    raise
+                result = e.returncode
+                log("Couldn't acquire DPKG lock. Will retry in {} seconds."
+                    "".format(APT_NO_LOCK_RETRY_DELAY))
+                time.sleep(APT_NO_LOCK_RETRY_DELAY)
+
+    else:
+        subprocess.call(cmd, env=env)

@@ -1,5 +1,6 @@
-branch: lp:charm-helpers
+branch: lp:~xianghui/charm-helpers/format-ipv6
 destination: hooks/charmhelpers
 include:
     - core
     - fetch
+    - contrib.network.ip
