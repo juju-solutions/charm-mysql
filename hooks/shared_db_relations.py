@@ -97,7 +97,7 @@ def shared_db_changed():
 
     settings = relation_get()
     if utils.config_get('prefer-ipv6'):
-        local_hostname = get_ipv6_addr(exc_list=[config('vip')])[0]
+        local_hostname = get_ipv6_addr(exc_list=[utils.config_get('vip')])[0]
     else:
         local_hostname = utils.unit_get('private-address')
 
