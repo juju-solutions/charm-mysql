@@ -96,14 +96,15 @@ def shared_db_changed():
         return
 
     settings = relation_get()
-    local_hostname = utils.unit_get('private-address')
+    if utils.config_get('prefer-ipv6'):
+        local_hostname = get_ipv6_addr(exc_list=[config('vip')])[0]
+    else:
+        local_hostname = utils.unit_get('private-address')
+
     singleset = set([
         'database',
         'username',
         'hostname'])
-
-    if utils.config_get('prefer-ipv6'):
-        local_hostname = get_ipv6_addr()[0]
 
     if singleset.issubset(settings):
         # Process a single database configuration
