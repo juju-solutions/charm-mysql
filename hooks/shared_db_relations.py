@@ -66,7 +66,11 @@ def shared_db_changed():
                      username):
         passwd_file = "/var/lib/mysql/mysql-{}.passwd".format(username)
         if hostname != local_hostname:
-            remote_ip = socket.gethostbyname(hostname)
+            try:
+                remote_ip = socket.gethostbyname(hostname)
+            except Exception:
+                # socket.gethostbyname doesn't support ipv6
+                remote_ip = hostname
         else:
             remote_ip = '127.0.0.1'
 
@@ -96,14 +100,15 @@ def shared_db_changed():
         return
 
     settings = relation_get()
-    local_hostname = utils.unit_get('private-address')
+    if utils.config_get('prefer-ipv6'):
+        local_hostname = get_ipv6_addr(exc_list=[utils.config_get('vip')])[0]
+    else:
+        local_hostname = utils.unit_get('private-address')
+
     singleset = set([
         'database',
         'username',
         'hostname'])
-
-    if utils.config_get('prefer-ipv6'):
-        local_hostname = get_ipv6_addr()[0]
 
     if singleset.issubset(settings):
         # Process a single database configuration
