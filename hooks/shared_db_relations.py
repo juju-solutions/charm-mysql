@@ -66,7 +66,11 @@ def shared_db_changed():
                      username):
         passwd_file = "/var/lib/mysql/mysql-{}.passwd".format(username)
         if hostname != local_hostname:
-            remote_ip = socket.gethostbyname(hostname)
+            try:
+                remote_ip = socket.gethostbyname(hostname)
+            except Exception:
+                # socket.gethostbyname doesn't support ipv6
+                remote_ip = hostname
         else:
             remote_ip = '127.0.0.1'
 
