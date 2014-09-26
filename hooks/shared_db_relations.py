@@ -112,13 +112,21 @@ def shared_db_changed():
 
     if singleset.issubset(settings):
         # Process a single database configuration
-        if isinstance(settings['hostname'], list):
-            for host in settings['hostname']:
+
+        # Hostname can be json-encoded list of hostnames
+        hostname = settings['hostname']
+        try:
+            hostname = json.loads(hostname)
+        except ValueError:
+            pass
+
+        if isinstance(hostname, list):
+            for host in hostname:
                 password = configure_db(host,
                                         settings['database'],
                                         settings['username'])
         else:
-            password = configure_db(settings['hostname'],
+            password = configure_db(hostname,
                                     settings['database'],
                                     settings['username'])
 
