@@ -110,32 +110,31 @@ def shared_db_changed():
         'username',
         'hostname'])
 
-    singleset_multi_hosts = set([
-        'database',
-        'username',
-        'hostnames'])
-
     if singleset.issubset(settings):
         # Process a single database configuration
-        password = configure_db(settings['hostname'],
-                                settings['database'],
-                                settings['username'])
-
-        allowed_units = " ".join(unit_sorted(get_allowed_units(
-            settings['database'],
-            settings['username'])))
-        set_relation(allowed_units, local_hostname, password)
-    elif singleset_multi_hosts.issubset(settings):
-        hostnames = settings['hostnames']
-        for hostname in hostnames:
-            password = configure_db(hostname,
+        if isinstance(settings['hostname'], list):
+            for host in settings['hostname']:
+                password = configure_db(host,
+                                        settings['database'],
+                                        settings['username'])
+        else:
+            password = configure_db(settings['hostname'],
                                     settings['database'],
                                     settings['username'])
 
         allowed_units = " ".join(unit_sorted(get_allowed_units(
             settings['database'],
             settings['username'])))
-        set_relation(allowed_units, local_hostname, password)
+
+        if not cluster.is_clustered():
+            utils.relation_set(db_host=local_hostname,
+                               password=password,
+                               allowed_units=allowed_units)
+        else:
+            utils.relation_set(db_host=utils.config_get("vip"),
+                               password=password,
+                               allowed_units=allowed_units)
+
     else:
         # Process multiple database setup requests.
         # from incoming relation data:
@@ -181,16 +180,6 @@ def shared_db_changed():
         else:
             utils.relation_set(db_host=utils.config_get("vip"))
 
-
-def set_relation(local_hostname, password, allowed_units):
-    if not cluster.is_clustered():
-        utils.relation_set(db_host=local_hostname,
-                           password=password,
-                           allowed_units=allowed_units)
-    else:
-        utils.relation_set(db_host=utils.config_get("vip"),
-                           password=password,
-                           allowed_units=allowed_units)
 
 hooks = {"shared-db-relation-changed": shared_db_changed}
 
