@@ -163,8 +163,12 @@ def get_ceph_nodes():
     hosts = []
     for r_id in utils.relation_ids('ceph'):
         for unit in utils.relation_list(r_id):
-            hosts.append(utils.relation_get('private-address',
-                                            unit=unit, rid=r_id))
+            ceph_addr = \
+                utils.relation_get('ceph-public-address', rid=r_id,
+                                   unit=unit) or \
+                utils.relation_get('private-address', rid=r_id, unit=unit)
+            hosts.append(ceph_addr)
+
     return hosts
 
 
