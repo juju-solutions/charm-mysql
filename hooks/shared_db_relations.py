@@ -169,15 +169,15 @@ def shared_db_changed():
                 databases[db] = {}
             databases[db][x] = v
 
-        try:
-            hostname = json.loads(databases[db]['hostname'])
-        except ValueError:
-            hostname = databases[db]['hostname']
-
         return_data = {}
         allowed_units = []
         for db in databases:
             if singleset.issubset(databases[db]):
+                try:
+                    hostname = json.loads(databases[db]['hostname'])
+                except ValueError:
+                    hostname = databases[db]['hostname']
+
                 if isinstance(hostname, list):
                     for host in hostname:
                         password = configure_db(host,
