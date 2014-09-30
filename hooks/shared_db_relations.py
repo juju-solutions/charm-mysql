@@ -114,11 +114,10 @@ def shared_db_changed():
         # Process a single database configuration
 
         # Hostname can be json-encoded list of hostnames
-        hostname = settings['hostname']
         try:
-            hostname = json.loads(hostname)
+            hostname = json.loads(settings['hostname'])
         except ValueError:
-            pass
+            hostname = settings['hostname']
 
         if isinstance(hostname, list):
             for host in hostname:
@@ -169,14 +168,27 @@ def shared_db_changed():
             if db not in databases:
                 databases[db] = {}
             databases[db][x] = v
+
+        try:
+            hostname = json.loads(databases[db]['hostname'])
+        except ValueError:
+            hostname = databases[db]['hostname']
+
         return_data = {}
         allowed_units = []
         for db in databases:
             if singleset.issubset(databases[db]):
-                return_data['_'.join([db, 'password'])] = \
-                    configure_db(databases[db]['hostname'],
-                                 databases[db]['database'],
-                                 databases[db]['username'])
+                if isinstance(hostname, list):
+                    for host in hostname:
+                        password = configure_db(host,
+                                                databases[db]['database'],
+                                                databases[db]['username'])
+                else:
+                    password = configure_db(hostname,
+                                            databases[db]['database'],
+                                            databases[db]['username'])
+
+                return_data['_'.join([db, 'password'])] = password
                 return_data['_'.join([db, 'allowed_units'])] = \
                     " ".join(unit_sorted(get_allowed_units(
                         databases[db]['database'],

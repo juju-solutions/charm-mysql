@@ -31,9 +31,6 @@ if os.path.isdir('exec.d'):
     # Update again in case any pre-exec script(s) modified sources.
     apt_update()
 
-if utils.config_get('prefer-ipv6'):
-    utils.check_ipv6_compatibility()
-
 apt_install(['debconf-utils', 'python-mysqldb', 'uuid', 'pwgen', 'dnsutils'])
 
 PASSFILE = os.path.join('/var', 'lib', 'mysql', 'mysql.passwd')
