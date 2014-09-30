@@ -225,7 +225,6 @@ def is_relation_made(relation, key='private-address'):
 
 
 def check_ipv6_compatibility():
-    ubuntu_rel = float(lsb_release()['DISTRIB_RELEASE'])
-    if ubuntu_rel < 'trusty':
+    if lsb_release()['DISTRIB_CODENAME'].lower() < "trusty":
         raise Exception("IPv6 is not supported in charms for Ubuntu "
                         "versions less than Trusty 14.04")
