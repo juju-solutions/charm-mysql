@@ -69,7 +69,7 @@ options:
           image name exists in Ceph, it will be re-used and the data will be
           overwritten.
     ceph-osd-replication-count:
-        default: 2
+        default: 3
         type: int
         description: |
           This value dictates the number of replicas ceph must make of any
