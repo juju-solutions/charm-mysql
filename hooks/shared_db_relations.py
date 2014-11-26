@@ -55,10 +55,32 @@ def shared_db_changed():
         allowed_units = set()
         for relid in hookenv.relation_ids('shared-db'):
             for unit in hookenv.related_units(relid):
-                if grant_exists(database,
-                                username,
-                                get_unit_addr(relid, unit)):
-                    allowed_units.add(unit)
+                attr = "%s_%s" % (database, 'hostname')
+                hosts = hookenv.relation_get(attribute=attr, unit=unit,
+                                             rid=relid)
+                if not hosts:
+                    hosts = [hookenv.relation_get(attribute='private-address',
+                                                  unit=unit, rid=relid)]
+                else:
+                    # hostname can be json-encoded list of hostnames
+                    try:
+                        hosts = json.loads(hosts)
+                    except ValueError:
+                        pass
+
+                if not isinstance(hosts, list):
+                    hosts = [hosts]
+
+                if hosts:
+                    for host in hosts:
+                        utils.juju_log('INFO', "Checking host '%s' grant" %
+                                       (host))
+                        if grant_exists(database, username, host):
+                            if unit not in allowed_units:
+                                allowed_units.add(unit)
+                else:
+                    utils.juju_log('INFO', "No hosts found for grant check")
+
         return allowed_units
 
     def configure_db(hostname,
@@ -168,7 +190,6 @@ def shared_db_changed():
             databases[db][x] = v
 
         return_data = {}
-        allowed_units = []
         for db in databases:
             if singleset.issubset(databases[db]):
                 database = databases[db]['database']
