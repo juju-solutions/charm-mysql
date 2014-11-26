@@ -112,26 +112,24 @@ def shared_db_changed():
 
     if singleset.issubset(settings):
         # Process a single database configuration
+        hostname = settings['hostname']
+        database = settings['database']
+        username = settings['username']
 
         # Hostname can be json-encoded list of hostnames
         try:
-            hostname = json.loads(settings['hostname'])
+            hostname = json.loads(hostname)
         except ValueError:
-            hostname = settings['hostname']
+            pass
 
         if isinstance(hostname, list):
             for host in hostname:
-                password = configure_db(host,
-                                        settings['database'],
-                                        settings['username'])
+                password = configure_db(host, database, username)
         else:
-            password = configure_db(hostname,
-                                    settings['database'],
-                                    settings['username'])
+            password = configure_db(hostname, database, username)
 
-        allowed_units = " ".join(unit_sorted(get_allowed_units(
-            settings['database'],
-            settings['username'])))
+        allowed_units = " ".join(unit_sorted(get_allowed_units(database,
+                                                               username)))
 
         if not cluster.is_clustered():
             utils.relation_set(db_host=local_hostname,
@@ -173,26 +171,25 @@ def shared_db_changed():
         allowed_units = []
         for db in databases:
             if singleset.issubset(databases[db]):
+                database = databases[db]['database']
+                hostname = databases[db]['hostname']
+                username = databases[db]['username']
                 try:
-                    hostname = json.loads(databases[db]['hostname'])
+                    hostname = json.loads(hostname)
                 except ValueError:
-                    hostname = databases[db]['hostname']
+                    hostname = hostname
 
                 if isinstance(hostname, list):
                     for host in hostname:
-                        password = configure_db(host,
-                                                databases[db]['database'],
-                                                databases[db]['username'])
+                        password = configure_db(host, database, username)
                 else:
-                    password = configure_db(hostname,
-                                            databases[db]['database'],
-                                            databases[db]['username'])
+                    password = configure_db(hostname, database, username)
 
                 return_data['_'.join([db, 'password'])] = password
+                allowed_units = unit_sorted(get_allowed_units(database,
+                                                              username))
                 return_data['_'.join([db, 'allowed_units'])] = \
-                    " ".join(unit_sorted(get_allowed_units(
-                        databases[db]['database'],
-                        databases[db]['username'])))
+                    " ".join(allowed_units)
         if len(return_data) > 0:
             utils.relation_set(**return_data)
         if not cluster.is_clustered():
