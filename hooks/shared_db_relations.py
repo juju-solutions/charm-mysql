@@ -20,6 +20,9 @@ import os
 import lib.utils as utils
 import lib.cluster_utils as cluster
 from charmhelpers.core import hookenv
+from charmhelpers.contrib.network.ip import (
+    get_ipv6_addr
+)
 
 LEADER_RES = 'res_mysql_vip'
 
@@ -52,10 +55,32 @@ def shared_db_changed():
         allowed_units = set()
         for relid in hookenv.relation_ids('shared-db'):
             for unit in hookenv.related_units(relid):
-                if grant_exists(database,
-                                username,
-                                get_unit_addr(relid, unit)):
-                    allowed_units.add(unit)
+                attr = "%s_%s" % (database, 'hostname')
+                hosts = hookenv.relation_get(attribute=attr, unit=unit,
+                                             rid=relid)
+                if not hosts:
+                    hosts = [hookenv.relation_get(attribute='private-address',
+                                                  unit=unit, rid=relid)]
+                else:
+                    # hostname can be json-encoded list of hostnames
+                    try:
+                        hosts = json.loads(hosts)
+                    except ValueError:
+                        pass
+
+                if not isinstance(hosts, list):
+                    hosts = [hosts]
+
+                if hosts:
+                    for host in hosts:
+                        utils.juju_log('INFO', "Checking host '%s' grant" %
+                                       (host))
+                        if grant_exists(database, username, host):
+                            if unit not in allowed_units:
+                                allowed_units.add(unit)
+                else:
+                    utils.juju_log('INFO', "No hosts found for grant check")
+
         return allowed_units
 
     def configure_db(hostname,
@@ -63,7 +88,11 @@ def shared_db_changed():
                      username):
         passwd_file = "/var/lib/mysql/mysql-{}.passwd".format(username)
         if hostname != local_hostname:
-            remote_ip = socket.gethostbyname(hostname)
+            try:
+                remote_ip = socket.gethostbyname(hostname)
+            except Exception:
+                # socket.gethostbyname doesn't support ipv6
+                remote_ip = hostname
         else:
             remote_ip = '127.0.0.1'
 
@@ -92,8 +121,12 @@ def shared_db_changed():
                        ' as this service unit is not the leader')
         return
 
+    if utils.config_get('prefer-ipv6'):
+        local_hostname = get_ipv6_addr(exc_list=[utils.config_get('vip')])[0]
+    else:
+        local_hostname = utils.unit_get('private-address')
+
     settings = relation_get()
-    local_hostname = utils.unit_get('private-address')
     singleset = set([
         'database',
         'username',
@@ -101,12 +134,25 @@ def shared_db_changed():
 
     if singleset.issubset(settings):
         # Process a single database configuration
-        password = configure_db(settings['hostname'],
-                                settings['database'],
-                                settings['username'])
-        allowed_units = " ".join(unit_sorted(get_allowed_units(
-            settings['database'],
-            settings['username'])))
+        hostname = settings['hostname']
+        database = settings['database']
+        username = settings['username']
+
+        # Hostname can be json-encoded list of hostnames
+        try:
+            hostname = json.loads(hostname)
+        except ValueError:
+            pass
+
+        if isinstance(hostname, list):
+            for host in hostname:
+                password = configure_db(host, database, username)
+        else:
+            password = configure_db(hostname, database, username)
+
+        allowed_units = " ".join(unit_sorted(get_allowed_units(database,
+                                                               username)))
+
         if not cluster.is_clustered():
             utils.relation_set(db_host=local_hostname,
                                password=password,
@@ -142,24 +188,36 @@ def shared_db_changed():
             if db not in databases:
                 databases[db] = {}
             databases[db][x] = v
+
         return_data = {}
-        allowed_units = []
         for db in databases:
             if singleset.issubset(databases[db]):
-                return_data['_'.join([db, 'password'])] = \
-                    configure_db(databases[db]['hostname'],
-                                 databases[db]['database'],
-                                 databases[db]['username'])
+                database = databases[db]['database']
+                hostname = databases[db]['hostname']
+                username = databases[db]['username']
+                try:
+                    hostname = json.loads(hostname)
+                except ValueError:
+                    hostname = hostname
+
+                if isinstance(hostname, list):
+                    for host in hostname:
+                        password = configure_db(host, database, username)
+                else:
+                    password = configure_db(hostname, database, username)
+
+                return_data['_'.join([db, 'password'])] = password
+                allowed_units = unit_sorted(get_allowed_units(database,
+                                                              username))
                 return_data['_'.join([db, 'allowed_units'])] = \
-                    " ".join(unit_sorted(get_allowed_units(
-                        databases[db]['database'],
-                        databases[db]['username'])))
+                    " ".join(allowed_units)
         if len(return_data) > 0:
             utils.relation_set(**return_data)
         if not cluster.is_clustered():
             utils.relation_set(db_host=local_hostname)
         else:
             utils.relation_set(db_host=utils.config_get("vip"))
+
 
 hooks = {"shared-db-relation-changed": shared_db_changed}
 

@@ -14,6 +14,9 @@ import os
 import subprocess
 import socket
 import sys
+from charmhelpers.core.host import (
+    lsb_release
+)
 
 
 def do_hooks(hooks):
@@ -219,3 +222,9 @@ def is_relation_made(relation, key='private-address'):
             if relation_get(key, rid=r_id, unit=unit):
                 return True
     return False
+
+
+def check_ipv6_compatibility():
+    if lsb_release()['DISTRIB_CODENAME'].lower() < "trusty":
+        raise Exception("IPv6 is not supported in charms for Ubuntu "
+                        "versions less than Trusty 14.04")

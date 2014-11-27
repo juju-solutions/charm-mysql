@@ -42,10 +42,18 @@ def ha_relation_joined():
 
         block_storage = 'ceph'
 
+        if utils.config_get('prefer-ipv6'):
+            res_mysql_vip = 'ocf:heartbeat:IPv6addr'
+            vip_params = 'ipv6addr'
+            vip_cidr = '64'
+        else:
+            res_mysql_vip = 'ocf:heartbeat:IPaddr2'
+            vip_params = 'ip'
+
         resources = {
             'res_mysql_rbd': 'ocf:ceph:rbd',
             'res_mysql_fs': 'ocf:heartbeat:Filesystem',
-            'res_mysql_vip': 'ocf:heartbeat:IPaddr2',
+            'res_mysql_vip': res_mysql_vip,
             'res_mysqld': 'upstart:mysql'}
 
         rbd_name = utils.config_get('rbd-name')
@@ -57,8 +65,8 @@ def ha_relation_joined():
             'res_mysql_fs': 'params device="/dev/rbd/%s/%s" directory="%s" '
                             'fstype="ext4" op start start-delay="10s"' %
                             (POOL_NAME, rbd_name, DATA_SRC_DST),
-            'res_mysql_vip': 'params ip="%s" cidr_netmask="%s" nic="%s"' %
-                             (vip, vip_cidr, vip_iface),
+            'res_mysql_vip': 'params "%s"="%s" cidr_netmask="%s" nic="%s"' %
+                             (vip_params, vip, vip_cidr, vip_iface),
             'res_mysqld': 'op start start-delay="5s" op monitor interval="5s"'}
 
         groups = {

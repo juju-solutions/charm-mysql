@@ -72,6 +72,9 @@ def get_memtotal():
                 return '%s%s' % (mtot, upper(modifier[0]))
 
 
+if configs['prefer-ipv6']:
+    utils.check_ipv6_compatibility()
+
 # There is preliminary code for mariadb, but switching
 # from mariadb -> mysql fails badly, so it is disabled for now.
 valid_flavors = ['distro','percona']
@@ -172,6 +175,11 @@ if configs['max-connections'] == -1:
 else:
     configs['max-connections'] = 'max_connections = %s' % configs['max-connections']
 
+if configs['prefer-ipv6']:
+    configs['bind-address'] = '::' 
+else:
+    configs['bind-address'] = '0.0.0.0'
+
 template="""
 ######################################
 #
@@ -235,7 +243,7 @@ skip-external-locking
 #
 # Instead of skip-networking the default is now to listen only on
 # localhost which is more compatible and is not less secure.
-bind-address		= 0.0.0.0
+bind-address		= %(bind-address)s
 #
 # * Fine Tuning
 #

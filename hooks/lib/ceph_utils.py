@@ -16,6 +16,10 @@ import shutil
 import time
 import lib.utils as utils
 
+from charmhelpers.contrib.network.ip import (
+    format_ipv6_addr
+)
+
 KEYRING = '/etc/ceph/ceph.client.%s.keyring'
 KEYFILE = '/etc/ceph/ceph.client.%s.key'
 
@@ -163,8 +167,14 @@ def get_ceph_nodes():
     hosts = []
     for r_id in utils.relation_ids('ceph'):
         for unit in utils.relation_list(r_id):
-            hosts.append(utils.relation_get('private-address',
-                                            unit=unit, rid=r_id))
+            ceph_addr = \
+                utils.relation_get('ceph-public-address', rid=r_id,
+                                   unit=unit) or \
+                utils.relation_get('private-address', rid=r_id, unit=unit)
+            # We host is an ipv6 address we need to wrap it in []
+            ceph_addr = format_ipv6_addr(ceph_addr) or ceph_addr
+            hosts.append(ceph_addr)
+
     return hosts
 
 
