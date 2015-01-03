@@ -3,3 +3,4 @@
 sudo add-apt-repository ppa:juju/stable
 sudo apt-get update
 sudo apt-get install amulet
+pip3 install mysql-connector-python
