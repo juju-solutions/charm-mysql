@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import time
 
 import amulet
 import pymysql
@@ -17,8 +18,21 @@ except:
     raise
 
 # Testing Max Connections
+
+## Allow connections from outside
+mysqlmaster = d.sentry.unit['mysql/0']
+mysqlmaster.run(
+    "echo 'GRANT ALL ON *.* to root@\"%\"'\""
+    " IDENTIFIED BY '`cat /var/lib/mysql/mysql.passwd`'\"|"
+    "mysql -u root --password=`cat /var/lib/mysql/mysql.passwd`"
+)
+
 max_connections = 10
 d.configure('mysql', {'max-connections': max_connections})
+d.sentry.wait()
+# As it seems there is no way o wait till hook execution finished,
+# we will wait some time hoping it finished
+time.sleep(60)
 mysql_server = d.sentry.unit['mysql/0']
 mysql_password = mysql_server.file_contents('/var/lib/mysql/mysql.passwd')
 
@@ -27,7 +41,7 @@ connections = []
 # As we are using root as test user, we need to test with max_conn + 1
 cnx_list = []
 try:
-    for cnx_idx in range(0, max_connections + 1):
+    for cnx_idx in range(0, max_connections + 10):
         cnx = pymysql.connect(
             user='root',
             password=mysql_password,
@@ -35,15 +49,15 @@ try:
             database='mysql')
 
         cnx_list.append(cnx)
-except pymysql.InternalError as err:
+except pymysql.err.OperationalError as err:
     TOO_MANY_USER_CONNECTIONS = 1203
     err_code = err.args[0]
-    if (err_code == TOO_MANY_USER_CONNECTIONS and
-         len(cnx_list) < max_connections + 1):
+    if err_code == TOO_MANY_USER_CONNECTIONS and \
+            len(cnx_list) < max_connections + 1:
         amulet.raise_status(
             amulet.FAIL,
-            'MySQL is not allowing to connect {} times.'.format(
-                max_connections))
+            'MySQL is not allowing to connect {} times, just {} times.'.format(
+                max_connections, len(cnx_list)))
 
 else:
     amulet.raise_status(amulet.FAIL,
