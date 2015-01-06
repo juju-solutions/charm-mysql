@@ -3,6 +3,8 @@
 import os
 import MySQLdb
 import subprocess
+import shutil
+from charmhelpers.core import hookenv, host
 
 
 def get_service_user_file(service):
@@ -120,3 +122,39 @@ def cleanup_grant(db_user,
                                               remote_ip))
     finally:
         cursor.close()
+
+
+def migrate_to_mount(new_path):
+    """Invoked when new mountpoint appears. This function safely migrates
+    MySQL data from local disk to persistent storage (only if needed)
+    """
+    old_path = '/var/lib/mysql'
+    if os.path.islink(old_path):
+        hookenv.log('{} is already a symlink, skipping migration'.format(
+            old_path))
+        return True
+    os.chmod(new_path, 0700)
+    host.service_stop('mysql')
+    host.rsync(os.path.join(old_path, ''),  # Ensure we have trailing slashes
+               os.path.join(new_path, ''),
+               options=['--archive'])
+    shutil.rmtree(old_path)
+    os.symlink(new_path, old_path)
+    host.service_start('mysql')
+
+
+def migrate_to_disk(old_path):
+    """Invoked when storage mountpoint is removed. This function migrates
+    MySQL data to local disk and wipes mountpoint
+    """
+    new_path = '/var/lib/mysql'
+    if not os.path.islink(new_path):
+        hookenv.log('{} is not a symlink, skipping '
+                    'migration from {}'.format(new_path, old_path))
+        return True
+    host.service_stop('mysql')
+    host.mkdir(new_path, owner='mysql', group='mysql', perms=0700, force=True)
+    host.rsync(os.path.join(old_path, ''),  # Ensure we have trailing slashes
+               os.path.join(new_path, ''),
+               options=['--archive'])
+    host.service_start('mysql')
