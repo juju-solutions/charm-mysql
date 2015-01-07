@@ -141,20 +141,3 @@ def migrate_to_mount(new_path):
     shutil.rmtree(old_path)
     os.symlink(new_path, old_path)
     host.service_start('mysql')
-
-
-def migrate_to_disk(old_path):
-    """Invoked when storage mountpoint is removed. This function migrates
-    MySQL data to local disk and wipes mountpoint
-    """
-    new_path = '/var/lib/mysql'
-    if not os.path.islink(new_path):
-        hookenv.log('{} is not a symlink, skipping '
-                    'migration from {}'.format(new_path, old_path))
-        return True
-    host.service_stop('mysql')
-    host.mkdir(new_path, owner='mysql', group='mysql', perms=0700, force=True)
-    host.rsync(os.path.join(old_path, ''),  # Ensure we have trailing slashes
-               os.path.join(new_path, ''),
-               options=['--archive'])
-    host.service_start('mysql')

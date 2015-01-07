@@ -3,7 +3,7 @@
 import sys
 
 import common
-from charmhelpers.core import hookenv
+from charmhelpers.core import hookenv, host
 
 
 hooks = hookenv.Hooks()
@@ -21,12 +21,10 @@ def data_relation():
         hookenv.relation_set(mountpoint=mountpoint)
 
 
-@hooks.hook('data-relation-departed')
+@hooks.hook('data-relation-departed', 'data-relation-broken')
 def data_relation_gone():
-    if hookenv.relation_get('mountpoint') == mountpoint:
-        hookenv.log('Mount point {} going away. Moving data back to'
-                    'local disk.'.format(mountpoint))
-        common.migrate_to_disk(mountpoint)
+    hookenv.log('Data relation no longer present, stopping MysQL.')
+    host.service_stop('mysql')
 
 
 if __name__ == '__main__':
