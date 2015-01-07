@@ -5,6 +5,7 @@ import MySQLdb
 import subprocess
 import shutil
 from charmhelpers.core import hookenv, host
+from charmhelpers.core.templating import render
 
 
 def get_service_user_file(service):
@@ -134,6 +135,10 @@ def migrate_to_mount(new_path):
             old_path))
         return True
     os.chmod(new_path, 0700)
+    if os.path.isdir('/etc/apparmor.d/local'):
+        render('apparmor.j2', '/etc/apparmor.d/local/usr.sbin.mysqld',
+               context={'path': os.path.join(new_path, '')})
+        host.service_reload('apparmor')
     host.service_stop('mysql')
     host.rsync(os.path.join(old_path, ''),  # Ensure we have trailing slashes
                os.path.join(new_path, ''),
