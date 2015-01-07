@@ -40,26 +40,11 @@ def install(*pkgs):
         cmd.append(pkg)
     subprocess.check_call(cmd)
 
-TEMPLATES_DIR = 'templates'
-
-try:
-    import jinja2
-except ImportError:
-    install('python-jinja2')
-    import jinja2
-
 try:
     import dns.resolver
 except ImportError:
     install('python-dnspython')
     import dns.resolver
-
-
-def render_template(template_name, context, template_dir=TEMPLATES_DIR):
-    templates = jinja2.Environment(loader=jinja2.FileSystemLoader(
-                                   template_dir))
-    template = templates.get_template(template_name)
-    return template.render(context)
 
 # Protocols
 TCP = 'TCP'
