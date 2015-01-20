@@ -17,6 +17,14 @@ Once deployed, you can retrieve the MySQL root user password by logging in to th
     juju ssh mysql/0
     mysql -u root -p`sudo cat /var/lib/mysql/mysql.passwd`
 
+## Backups
+
+The charm supports simple backups. To enable them set `backup_schedule` option. Optionally you can override default `backup_dir` and/or `backup_retention_count`:
+
+    juju set mysql backup_schedule="45 5 * * *" # cron formatted schedule
+    juju set mysql backup_dir="/mnt/backup"
+    juju set mysql backup_retention_count=28
+
 # Scale Out Usage 
 
 ## Replication
