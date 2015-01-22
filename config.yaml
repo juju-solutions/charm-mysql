@@ -125,7 +125,7 @@ options:
     backup_dir:
         default: "/srv/backups"
         type: string
-        description: "Directory where bakcups will be stored"
+        description: "Directory where backups will be stored"
     backup_schedule:
         default: ""
         type: string
