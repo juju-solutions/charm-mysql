@@ -1,7 +1,8 @@
-branch: lp:charm-helpers
+branch: lp:~hopem/charm-helpers/contrib-database-mysql 
 destination: hooks/charmhelpers
 include:
     - __init__
     - core
     - fetch
     - contrib.network.ip
+    - contrib.database

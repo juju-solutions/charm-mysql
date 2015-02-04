@@ -60,9 +60,13 @@ broken_path = '/var/lib/juju/%s.mysql.broken' % database_name
 broken = os.path.exists(broken_path)
 
 
+def get_mysql_root_passwd():
+    return open("/var/lib/mysql/mysql.passwd").read().strip()
+
+
 def get_db_cursor():
     # Connect to mysql
-    passwd = open("/var/lib/mysql/mysql.passwd").read().strip()
+    passwd = get_mysql_root_passwd()
     connection = MySQLdb.connect(user="root", host="localhost", passwd=passwd)
     return connection.cursor()
 

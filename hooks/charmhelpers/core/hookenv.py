@@ -1,3 +1,19 @@
+# Copyright 2014-2015 Canonical Limited.
+#
+# This file is part of charm-helpers.
+#
+# charm-helpers is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3 as
+# published by the Free Software Foundation.
+#
+# charm-helpers is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with charm-helpers.  If not, see <http://www.gnu.org/licenses/>.
+
 "Interactions with the Juju environment"
 # Copyright 2013 Canonical Ltd.
 #
@@ -68,6 +84,8 @@ def log(message, level=None):
     command = ['juju-log']
     if level:
         command += ['-l', level]
+    if not isinstance(message, six.string_types):
+        message = repr(message)
     command += [message]
     subprocess.call(command)
 
@@ -394,18 +412,28 @@ def relations_of_type(reltype=None):
 
 
 @cached
+def metadata():
+    """Get the current charm metadata.yaml contents as a python object"""
+    with open(os.path.join(charm_dir(), 'metadata.yaml')) as md:
+        return yaml.safe_load(md)
+
+
+@cached
 def relation_types():
     """Get a list of relation types supported by this charm"""
-    charmdir = os.environ.get('CHARM_DIR', '')
-    mdf = open(os.path.join(charmdir, 'metadata.yaml'))
-    md = yaml.safe_load(mdf)
     rel_types = []
+    md = metadata()
     for key in ('provides', 'requires', 'peers'):
         section = md.get(key)
         if section:
             rel_types.extend(section.keys())
-    mdf.close()
     return rel_types
+
+
+@cached
+def charm_name():
+    """Get the name of the current charm as is specified on metadata.yaml"""
+    return metadata().get('name')
 
 
 @cached
