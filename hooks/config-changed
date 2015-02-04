@@ -16,6 +16,8 @@ from charmhelpers.fetch import (
     apt_install
 )
 from charmhelpers.core.hookenv import relations_of_type
+from charmhelpers.core.host import mkdir, rsync
+from charmhelpers.core.templating import render
 
 
 # Add archive source if provided
@@ -390,3 +392,16 @@ if need_restart:
 if relations_of_type('nrpe-external-master'):
     import nrpe_relations
     nrpe_relations.nrpe_relation()
+
+if (configs.has_key("backup_schedule") and
+    configs.has_key("backup_dir") and
+    configs["backup_schedule"]):
+    rsync("scripts/mysql_backup.sh", "/usr/local/bin/",
+          options=["--executability"])
+    if not os.path.exists(configs["backup_dir"]):
+        mkdir(configs["backup_dir"], perms=0700)
+    render("mysql_backup.j2", "/etc/cron.d/mysql_backup", configs)
+else:
+    for path in ["/etc/cron.d/mysql_backup", "/usr/local/bin/mysql_backup.sh"]:
+        if os.path.exists(path):
+            os.unlink(path)

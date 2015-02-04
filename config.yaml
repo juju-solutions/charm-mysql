@@ -122,3 +122,16 @@ options:
         default: '0.0.0.0'
         type: string
         description: "mysql bind host address"
+    backup_dir:
+        default: "/srv/backups"
+        type: string
+        description: "Directory where backups will be stored"
+    backup_schedule:
+        default: ""
+        type: string
+        description: |
+          Cron schedule used for backups. If empty backups are disabled
+    backup_retention_count:
+        default: 7
+        type: int 
+        description: Number of recent backups to retain.
