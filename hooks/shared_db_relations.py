@@ -74,18 +74,17 @@ def shared_db_changed():
         hostname = settings['hostname']
         database = settings['database']
         username = settings['username']
+        passwd_file = "/var/lib/mysql/mysql-{}.passwd".format(username)
 
         # Hostname can be json-encoded list of hostnames
         try:
             hostname = json.loads(hostname)
         except ValueError:
-            pass
+            hostname = [hostname]
 
-        if isinstance(hostname, list):
-            for host in hostname:
-                password = configure_db(host, database, username)
-        else:
-            password = configure_db(hostname, database, username)
+        for host in hostname:
+            password = configure_db(host, database, username,
+                                    passwd_file=passwd_file)
 
         allowed_units = get_allowed_units(database, username,
                                           db_root_password=rpasswd)
@@ -134,16 +133,18 @@ def shared_db_changed():
                 database = databases[db]['database']
                 hostname = databases[db]['hostname']
                 username = databases[db]['username']
+                passwd_file = "/var/lib/mysql/mysql-{}.passwd".format(username)
+
                 try:
+                    # Can be json-encoded list of hostnames
                     hostname = json.loads(hostname)
                 except ValueError:
-                    hostname = hostname
+                    # Otherwise expected to be single hostname
+                    hostname = [hostname]
 
-                if isinstance(hostname, list):
-                    for host in hostname:
-                        password = configure_db(host, database, username)
-                else:
-                    password = configure_db(hostname, database, username)
+                for host in hostname:
+                    password = configure_db(host, database, username,
+                                            passwd_file=passwd_file)
 
                 a_units = get_allowed_units(database, username,
                                             db_root_password=rpasswd)
