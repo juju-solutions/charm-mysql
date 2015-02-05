@@ -137,7 +137,7 @@ def shared_db_changed():
 
                 a_units = db_helper.get_allowed_units(database, username)
                 a_units = ' '.join(unit_sorted(a_units))
-                allowed_units['%s_allowed_units' % (db)] = a_units
+                return_data['%s_allowed_units' % (db)] = a_units
 
                 return_data['%s_password' % (db)] = password
 
