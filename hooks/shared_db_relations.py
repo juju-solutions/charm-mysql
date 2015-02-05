@@ -12,13 +12,7 @@ import json
 import lib.utils as utils
 import lib.cluster_utils as cluster
 
-from common import (
-    get_mysql_root_passwd,
-)
-from charmhelpers.contrib.database.mysql import (
-    get_allowed_units,
-    configure_db,
-)
+from common import get_db_helper
 from charmhelpers.core import hookenv
 from charmhelpers.contrib.network.ip import (
     get_ipv6_addr
@@ -67,14 +61,13 @@ def shared_db_changed():
         'username',
         'hostname'])
 
-    rpasswd = get_mysql_root_passwd()
+    db_helper = get_db_helper()
 
     if singleset.issubset(settings):
         # Process a single database configuration
         hostname = settings['hostname']
         database = settings['database']
         username = settings['username']
-        passwd_file = "/var/lib/mysql/mysql-{}.passwd".format(username)
 
         # Hostname can be json-encoded list of hostnames
         try:
@@ -83,11 +76,9 @@ def shared_db_changed():
             hostname = [hostname]
 
         for host in hostname:
-            password = configure_db(host, database, username,
-                                    passwd_file=passwd_file)
+            password = db_helper.configure_db(host, database, username)
 
-        allowed_units = get_allowed_units(database, username,
-                                          db_root_password=rpasswd)
+        allowed_units = db_helper.get_allowed_units(database, username)
         allowed_units = unit_sorted(allowed_units)
         allowed_units = ' '.join(allowed_units)
 
@@ -133,7 +124,6 @@ def shared_db_changed():
                 database = databases[db]['database']
                 hostname = databases[db]['hostname']
                 username = databases[db]['username']
-                passwd_file = "/var/lib/mysql/mysql-{}.passwd".format(username)
 
                 try:
                     # Can be json-encoded list of hostnames
@@ -143,11 +133,9 @@ def shared_db_changed():
                     hostname = [hostname]
 
                 for host in hostname:
-                    password = configure_db(host, database, username,
-                                            passwd_file=passwd_file)
+                    password = db_helper.configure_db(host, database, username)
 
-                a_units = get_allowed_units(database, username,
-                                            db_root_password=rpasswd)
+                a_units = db_helper.get_allowed_units(database, username)
                 a_units = ' '.join(unit_sorted(a_units))
                 allowed_units['%s_allowed_units' % (db)] = a_units
 

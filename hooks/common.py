@@ -6,6 +6,7 @@ import subprocess
 import shutil
 from charmhelpers.core import hookenv, host
 from charmhelpers.core.templating import render
+from charmhelpers.contrib.database.mysql import MySQLHelper
 
 
 def get_service_user_file(service):
@@ -60,13 +61,15 @@ broken_path = '/var/lib/juju/%s.mysql.broken' % database_name
 broken = os.path.exists(broken_path)
 
 
-def get_mysql_root_passwd():
-    return open("/var/lib/mysql/mysql.passwd").read().strip()
+def get_db_helper():
+    return MySQLHelper(rpasswdf_template='/var/lib/mysql/mysql.passwd',
+                       upasswdf_template='/var/lib/mysql/mysql-{}.passwd')
 
 
 def get_db_cursor():
     # Connect to mysql
-    passwd = get_mysql_root_passwd()
+    db_helper = get_db_helper()
+    passwd = db_helper.get_mysql_root_password()
     connection = MySQLdb.connect(user="root", host="localhost", passwd=passwd)
     return connection.cursor()
 
