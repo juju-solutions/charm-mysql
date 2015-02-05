@@ -7,11 +7,20 @@ import lib.utils as utils
 import lib.ceph_utils as ceph
 import lib.cluster_utils as cluster
 
+from charmhelpers.contrib.peerstorage import (
+    peer_echo,
+)
+
 # CEPH
 DATA_SRC_DST = '/var/lib/mysql'
 SERVICE_NAME = os.getenv('JUJU_UNIT_NAME').split('/')[0]
 POOL_NAME = SERVICE_NAME
 LEADER_RES = 'res_mysql_vip'
+
+
+def cluster_changed():
+    # Echo any passwords placed on peer relation
+    peer_echo(includes=['.passwd'])
 
 
 def ha_relation_joined():
@@ -148,6 +157,7 @@ hooks = {
     "ha-relation-changed": ha_relation_changed,
     "ceph-relation-joined": ceph_joined,
     "ceph-relation-changed": ceph_changed,
+    "cluster-relation-changed": cluster_changed,
 }
 
 utils.do_hooks(hooks)
