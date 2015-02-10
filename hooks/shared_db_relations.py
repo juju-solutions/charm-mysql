@@ -82,15 +82,14 @@ def shared_db_changed():
         allowed_units = unit_sorted(allowed_units)
         allowed_units = ' '.join(allowed_units)
 
-        if not cluster.is_clustered():
-            utils.relation_set(db_host=local_hostname,
-                               password=password,
-                               allowed_units=allowed_units)
+        if cluster.is_clustered():
+            db_host = utils.config_get("vip")
         else:
-            utils.relation_set(db_host=utils.config_get("vip"),
-                               password=password,
-                               allowed_units=allowed_units)
+            db_host = local_hostname
 
+        utils.relation_set(db_host=db_host,
+                           password=password,
+                           allowed_units=allowed_units)
     else:
         # Process multiple database setup requests.
         # from incoming relation data:

@@ -1,4 +1,4 @@
-branch: lp:~hopem/charm-helpers/contrib-database-mysql 
+branch: lp:charm-helpers
 destination: hooks/charmhelpers
 include:
     - __init__
