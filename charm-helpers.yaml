@@ -5,3 +5,5 @@ include:
     - core
     - fetch
     - contrib.network.ip
+    - contrib.database
+    - contrib.peerstorage

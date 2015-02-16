@@ -6,6 +6,7 @@ import subprocess
 import shutil
 from charmhelpers.core import hookenv, host
 from charmhelpers.core.templating import render
+from charmhelpers.contrib.database.mysql import MySQLHelper
 
 
 def get_service_user_file(service):
@@ -60,69 +61,17 @@ broken_path = '/var/lib/juju/%s.mysql.broken' % database_name
 broken = os.path.exists(broken_path)
 
 
+def get_db_helper():
+    return MySQLHelper(rpasswdf_template='/var/lib/mysql/mysql.passwd',
+                       upasswdf_template='/var/lib/mysql/mysql-{}.passwd')
+
+
 def get_db_cursor():
     # Connect to mysql
-    passwd = open("/var/lib/mysql/mysql.passwd").read().strip()
+    db_helper = get_db_helper()
+    passwd = db_helper.get_mysql_root_password()
     connection = MySQLdb.connect(user="root", host="localhost", passwd=passwd)
     return connection.cursor()
-
-
-def database_exists(db_name):
-    cursor = get_db_cursor()
-    try:
-        cursor.execute("SHOW DATABASES")
-        databases = [i[0] for i in cursor.fetchall()]
-    finally:
-        cursor.close()
-    return db_name in databases
-
-
-def create_database(db_name):
-    cursor = get_db_cursor()
-    try:
-        cursor.execute("CREATE DATABASE {}".format(db_name))
-    finally:
-        cursor.close()
-
-
-def grant_exists(db_name, db_user, remote_ip):
-    cursor = get_db_cursor()
-    priv_string = "GRANT ALL PRIVILEGES ON `{}`.* " \
-                  "TO '{}'@'{}'".format(db_name, db_user, remote_ip)
-    try:
-        cursor.execute("SHOW GRANTS for '{}'@'{}'".format(db_user,
-                                                          remote_ip))
-        grants = [i[0] for i in cursor.fetchall()]
-    except MySQLdb.OperationalError:
-        print "No grants found"
-        return False
-    finally:
-        cursor.close()
-    return priv_string in grants
-
-
-def create_grant(db_name, db_user,
-                 remote_ip, password):
-    cursor = get_db_cursor()
-    try:
-        cursor.execute("GRANT ALL PRIVILEGES ON {}.* TO '{}'@'{}' "
-                       "IDENTIFIED BY '{}'".format(db_name,
-                                                   db_user,
-                                                   remote_ip,
-                                                   password))
-    finally:
-        cursor.close()
-
-
-def cleanup_grant(db_user,
-                  remote_ip):
-    cursor = get_db_cursor()
-    try:
-        cursor.execute("DROP FROM mysql.user WHERE user='{}' "
-                       "AND HOST='{}'".format(db_user,
-                                              remote_ip))
-    finally:
-        cursor.close()
 
 
 def migrate_to_mount(new_path):
