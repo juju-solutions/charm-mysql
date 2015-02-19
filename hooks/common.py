@@ -83,6 +83,17 @@ def migrate_to_mount(new_path):
         hookenv.log('{} is already a symlink, skipping migration'.format(
             old_path))
         return True
+    # Ensure our new mountpoint is empty. Otherwise error and allow
+    # users to investigate and migrate manually
+    files = os.listdir(new_path)
+    try:
+        files.remove('lost+found')
+    except ValueError:
+        pass
+    if files:
+        raise RuntimeError('Persistent storage contains old data. '
+                           'Please investigate and migrate data manually '
+                           'to: {}'.format(new_path))
     os.chmod(new_path, 0700)
     if os.path.isdir('/etc/apparmor.d/local'):
         render('apparmor.j2', '/etc/apparmor.d/local/usr.sbin.mysqld',
