@@ -1,9 +1,12 @@
 #!/usr/bin/make
 PYTHON := /usr/bin/env python
 
-lint:
-	@flake8 --exclude hooks/charmhelpers hooks
-#	@flake8 --exclude hooks/charmhelpers unit_tests
+virtualenv:
+	virtualenv .venv
+	.venv/bin/pip install flake8
+
+lint: virtualenv
+	.venv/bin/flake8 --exclude hooks/charmhelpers hooks
 	@charm proof
 
 # TODO: write some unit tests then uncomment this and the flake8 line above.

@@ -4,9 +4,13 @@ import time
 import amulet
 import pymysql
 
-d = amulet.Deployment()
+
+max_connections = 10
+
+d = amulet.Deployment(series='trusty')
 
 d.add('mysql')
+d.configure('mysql', {'max-connections': max_connections})
 d.expose('mysql')
 
 try:
@@ -17,7 +21,6 @@ except amulet.helpers.TimeoutError:
 except:
     raise
 
-# Testing Max Connections
 
 ## Allow connections from outside
 mysqlmaster = d.sentry.unit['mysql/0']
@@ -26,13 +29,6 @@ mysqlmaster.run(
     " IDENTIFIED BY '`cat /var/lib/mysql/mysql.passwd`'\"|"
     "mysql -u root --password=`cat /var/lib/mysql/mysql.passwd`"
 )
-
-max_connections = 10
-d.configure('mysql', {'max-connections': max_connections})
-d.sentry.wait()
-# As it seems there is no way o wait till hook execution finished,
-# we will wait some time hoping it finished
-time.sleep(60)
 mysql_server = d.sentry.unit['mysql/0']
 mysql_password = mysql_server.file_contents('/var/lib/mysql/mysql.passwd')
 
