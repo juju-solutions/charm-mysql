@@ -63,7 +63,8 @@ broken = os.path.exists(broken_path)
 
 def get_db_helper():
     return MySQLHelper(rpasswdf_template='/var/lib/mysql/mysql.passwd',
-                       upasswdf_template='/var/lib/mysql/mysql-{}.passwd')
+                       upasswdf_template='/var/lib/mysql/mysql-{}.passwd',
+                       delete_ondisk_passwd_file=False)
 
 
 def get_db_cursor():
