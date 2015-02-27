@@ -2,14 +2,18 @@
 PYTHON := /usr/bin/env python
 export PYTHONPATH := hooks
 
-lint:
-	@flake8 --exclude hooks/charmhelpers hooks
-	@flake8 --exclude hooks/charmhelpers unit_tests
+virtualenv:
+	virtualenv .venv
+	.venv/bin/pip install flake8 nose mock six
+
+lint: virtualenv
+	.venv/bin/flake8 --exclude hooks/charmhelpers hooks
 	@charm proof
 
-test:
+test: virtualenv
 	@echo Starting tests...
-	@$(PYTHON) /usr/bin/nosetests --nologcapture unit_tests
+	@sudo apt-get install python-six
+	@.venv/bin/nosetests --nologcapture unit_tests
 
 bin/charm_helpers_sync.py:
 	@mkdir -p bin
