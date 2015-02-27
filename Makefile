@@ -1,15 +1,15 @@
 #!/usr/bin/make
 PYTHON := /usr/bin/env python
+export PYTHONPATH := hooks
 
 lint:
 	@flake8 --exclude hooks/charmhelpers hooks
-#	@flake8 --exclude hooks/charmhelpers unit_tests
+	@flake8 --exclude hooks/charmhelpers unit_tests
 	@charm proof
 
-# TODO: write some unit tests then uncomment this and the flake8 line above.
-#test:
-#	@echo Starting tests...
-#	@$(PYTHON) /usr/bin/nosetests --nologcapture unit_tests
+test:
+	@echo Starting tests...
+	@$(PYTHON) /usr/bin/nosetests --nologcapture unit_tests
 
 bin/charm_helpers_sync.py:
 	@mkdir -p bin
