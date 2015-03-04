@@ -177,8 +177,14 @@ if configs['max-connections'] == -1:
 else:
     configs['max-connections'] = 'max_connections = %s' % configs['max-connections']
 
+if configs['wait-timeout'] == -1:
+    configs['wait-timeout'] = '# wait_timeout = ?'
+else:
+    configs['wait-timeout'] = 'wait_timeout = %s' % configs['wait-timeout']
+
+
 if configs['prefer-ipv6']:
-    configs['bind-address'] = '::' 
+    configs['bind-address'] = '::'
 else:
     configs['bind-address'] = '0.0.0.0'
 
@@ -255,6 +261,7 @@ max_allowed_packet	= 16M
 # the first time they are touched
 myisam-recover         = BACKUP
 %(max-connections)s
+%(wait-timeout)s
 #table_cache            = 64
 #thread_concurrency     = 10
 #

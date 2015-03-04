@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import time
 
 import amulet
 import pymysql
@@ -22,7 +21,7 @@ except:
     raise
 
 
-## Allow connections from outside
+# Allow connections from outside
 mysqlmaster = d.sentry.unit['mysql/0']
 mysqlmaster.run(
     "echo 'GRANT ALL ON *.* to root@\"%\"'\""
