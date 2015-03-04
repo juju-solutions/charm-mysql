@@ -27,6 +27,10 @@ options:
         default: -1
         type: int
         description: Maximum connections to allow. -1 means use the server's compiled in default.
+    wait-timeout:
+        default: -1
+        type: int
+        description: The number of seconds the server waits for activity on a noninteractive connection before closing it. -1 means use the server's compiled in default.
     binlog-format:
         default: 'MIXED'
         type: string
