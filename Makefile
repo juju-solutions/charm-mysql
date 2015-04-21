@@ -27,3 +27,6 @@ bin/charm_helpers_sync.py:
 sync: bin/charm_helpers_sync.py
 	$(PYTHON) bin/charm_helpers_sync.py -c charm-helpers.yaml
 	$(PYTHON) bin/charm_helpers_sync.py -c charm-helpers-tests.yaml
+
+sync_tests_only: bin/charm_helpers_sync.py
+	$(PYTHON) bin/charm_helpers_sync.py -c charm-helpers-tests.yaml
