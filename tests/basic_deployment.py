@@ -98,7 +98,7 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
             msg = "command `{}` returned {}".format(cmd, str(retcode))
             amulet.raise_status(amulet.FAIL, msg=msg)
 
-        if "juju@localhost7" not in output:
+        if "juju@localhost" not in output:
             msg = ("keystone mysql database query produced "
                    "unexpected data:\n{}".format(output))
             amulet.raise_status(amulet.FAIL, msg=msg)
@@ -119,8 +119,8 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
             amulet.raise_status(amulet.FAIL, msg=message)
 
     def test_200_mysql_default_config(self):
-        """Verify the data in the mysql config file's default section,
-           comparing some of the variables vs relation data."""
+        """Verify some important confg data in the mysql config file's
+           mysqld section."""
         unit = self.mysql_sentry
         conf = '/etc/mysql/my.cnf'
         relation = unit.relation('shared-db', 'keystone:shared-db')

@@ -5,7 +5,7 @@ set -ex
 sudo add-apt-repository --yes ppa:juju/stable
 sudo apt-get update --yes
 sudo apt-get install --yes python-amulet \
-                           python-configparser \
+                           python3-pip \
                            python-keystoneclient
 
 # Note(beisner): built-in configparser does not handle options with
@@ -22,5 +22,4 @@ if [[ -n "$AMULET_HTTP_PROXY" ]]; then
 fi
 
 # Setup for generic amulet test (Not in main < Vivid, pip it instead)
-#sudo apt-get install python3-pymysql
-sudo -E pip install PyMySQL3
+sudo -E pip3 install PyMySQL
