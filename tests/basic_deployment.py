@@ -6,7 +6,7 @@ from charmhelpers.contrib.openstack.amulet.deployment import (
     OpenStackAmuletDeployment
 )
 
-from charmhelpers.contrib.openstack.amulet.utils import (
+from charmhelpers.contrib.openstack.amulet.utils import (  # noqa
     OpenStackAmuletUtils,
     DEBUG,
     ERROR
@@ -94,7 +94,7 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
         u.log.debug('command: `{}` returned {}'.format(cmd, retcode))
         u.log.debug('output:\n{}'.format(output))
 
-        if retcode != 0:
+        if retcode:
             msg = "command `{}` returned {}".format(cmd, str(retcode))
             amulet.raise_status(amulet.FAIL, msg=msg)
 
