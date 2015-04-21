@@ -8,10 +8,6 @@ sudo apt-get install --yes python-amulet \
                            python3-pip \
                            python-keystoneclient
 
-# Note(beisner): built-in configparser does not handle options with
-# no value, as my.cnf uses.  https://bugs.python.org/issue7005
-# The python-configparser package backports the necessary fix.
-
 # Enable http proxy if AMULET_HTTP_PROXY is set
 if [[ -n "$AMULET_HTTP_PROXY" ]]; then
   export HTTP_PROXY=$AMULET_HTTP_PROXY
