@@ -94,7 +94,6 @@ class AmuletUtils(object):
         # with no value, such as the flags used in the mysql my.cnf file.
         # https://bugs.python.org/issue7005
         config = ConfigParser.ConfigParser(allow_no_value=True)
-        
         config.readfp(io.StringIO(file_contents))
         return config
 
