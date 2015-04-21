@@ -5,16 +5,22 @@ set -ex
 sudo add-apt-repository --yes ppa:juju/stable
 sudo apt-get update --yes
 sudo apt-get install --yes python-amulet \
+                           python-configparser \
                            python-keystoneclient
+
+# Note(beisner): built-in configparser does not handle options with
+# no value, as my.cnf uses.  https://bugs.python.org/issue7005
+# The python-configparser package backports the necessary fix.
 
 # Enable http proxy if AMULET_HTTP_PROXY is set
 if [[ -n "$AMULET_HTTP_PROXY" ]]; then
   export HTTP_PROXY=$AMULET_HTTP_PROXY
   export HTTPS_PROXY=$(echo $AMULET_HTTP_PROXY | sed 's/http/https/g')
-  echo " + Enabling HTTP(S) proxies."
-  env | grep PROXY
+  export http_proxy=$HTTP_PROXY
+  export https_proxy=$HTTPS_PROXY
+  env | egrep "proxy|PROXY"
 fi
 
 # Setup for generic amulet test (Not in main < Vivid, pip it instead)
 #sudo apt-get install python3-pymysql
-sudo pip install PyMySQL3
+sudo -E pip install PyMySQL3
