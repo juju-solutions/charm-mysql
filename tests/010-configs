@@ -1,7 +1,11 @@
 #!/usr/bin/python3
 
 import amulet
-import pymysql
+
+try:
+    import pymysql
+except ImportError:
+    import pymysql3
 
 
 max_connections = 10

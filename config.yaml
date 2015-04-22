@@ -137,5 +137,5 @@ options:
           Cron schedule used for backups. If empty backups are disabled
     backup_retention_count:
         default: 7
-        type: int 
+        type: int
         description: Number of recent backups to retain.

@@ -7,13 +7,17 @@ virtualenv:
 	.venv/bin/pip install flake8 nose mock six
 
 lint: virtualenv
-	.venv/bin/flake8 --exclude hooks/charmhelpers hooks
+	.venv/bin/flake8 --exclude hooks/charmhelpers hooks unit_tests tests
 	@charm proof
 
 test: virtualenv
 	@echo Starting tests...
 	@sudo apt-get install python-six
 	@.venv/bin/nosetests --nologcapture unit_tests
+
+functional_test:
+	@echo Starting Amulet tests...
+	@juju test -v -p AMULET_HTTP_PROXY,AMULET_OS_VIP --timeout 2700
 
 bin/charm_helpers_sync.py:
 	@mkdir -p bin
@@ -22,3 +26,4 @@ bin/charm_helpers_sync.py:
 
 sync: bin/charm_helpers_sync.py
 	$(PYTHON) bin/charm_helpers_sync.py -c charm-helpers.yaml
+	$(PYTHON) bin/charm_helpers_sync.py -c charm-helpers-tests.yaml
