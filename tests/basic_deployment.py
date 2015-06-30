@@ -6,10 +6,10 @@ from charmhelpers.contrib.openstack.amulet.deployment import (
     OpenStackAmuletDeployment
 )
 
-from charmhelpers.contrib.openstack.amulet.utils import (  # noqa
+from charmhelpers.contrib.openstack.amulet.utils import (
     OpenStackAmuletUtils,
     DEBUG,
-    ERROR
+    # ERROR
 )
 
 # Use DEBUG to turn on debug logging
@@ -20,7 +20,7 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
     """Amulet tests on a basic MySQL deployment."""
 
     def __init__(self, series=None, openstack=None, source=None,
-                 git=False, stable=False):
+                 git=False, stable=True):
         """Deploy the test environment."""
         super(MySQLBasicDeployment, self).__init__(series, openstack,
                                                    source, stable)
@@ -74,11 +74,11 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
     def test_100_services(self):
         """Verify the expected services are running on the corresponding
            service units."""
-        commands = {
-            self.mysql_sentry: ['status mysql'],
-            self.keystone_sentry: ['status keystone']
+        services = {
+            self.mysql_sentry: ['mysql'],
+            self.keystone_sentry: ['keystone']
         }
-        ret = u.validate_services(commands)
+        ret = u.validate_services_by_name(services)
         if ret:
             amulet.raise_status(amulet.FAIL, msg=ret)
 
@@ -95,12 +95,12 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
         u.log.debug('output:\n{}'.format(output))
 
         if retcode:
-            msg = "command `{}` returned {}".format(cmd, str(retcode))
+            msg = 'command `{}` returned {}'.format(cmd, str(retcode))
             amulet.raise_status(amulet.FAIL, msg=msg)
 
-        if "juju@localhost" not in output:
-            msg = ("keystone mysql database query produced "
-                   "unexpected data:\n{}".format(output))
+        if 'juju@localhost' not in output:
+            msg = ('keystone mysql database query produced '
+                   'unexpected data:\n{}'.format(output))
             amulet.raise_status(amulet.FAIL, msg=msg)
 
     def test_150_mysql_shared_db_relation(self):
@@ -123,36 +123,48 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
            mysqld section."""
         unit = self.mysql_sentry
         conf = '/etc/mysql/my.cnf'
-        relation = unit.relation('shared-db', 'keystone:shared-db')
-        u.log.debug('relation: {}'.format(relation))
-        expected = {'user': 'mysql',
-                    'socket': '/var/run/mysqld/mysqld.sock',
-                    'port': '3306',
-                    'basedir': '/usr',
-                    'datadir': '/var/lib/mysql',
-                    'myisam-recover': 'BACKUP',
-                    'query_cache_size': '0',
-                    'query_cache_type': '0',
-                    'tmpdir': '/tmp',
-                    'bind-address': '0.0.0.0',
-                    'log_error': '/var/log/mysql/error.log',
-                    'character-set-server': 'utf8'}
+        expected = {
+            'user': 'mysql',
+            'socket': '/var/run/mysqld/mysqld.sock',
+            'port': '3306',
+            'basedir': '/usr',
+            'datadir': '/var/lib/mysql',
+            'myisam-recover': 'BACKUP',
+            'query_cache_size': '0',
+            'query_cache_type': '0',
+            'tmpdir': '/tmp',
+            'bind-address': '0.0.0.0',
+            'log_error': '/var/log/mysql/error.log',
+            'character-set-server': 'utf8'
+        }
+        section = 'mysqld'
 
-        ret = u.validate_config_data(unit, conf, 'mysqld', expected)
+        ret = u.validate_config_data(unit, conf, section, expected)
         if ret:
-            message = "mysql config error: {}".format(ret)
+            message = 'mysql config error: {}'.format(ret)
             amulet.raise_status(amulet.FAIL, msg=message)
 
     def test_900_restart_on_config_change(self):
-        """Verify that mysql is restarted when the config is changed.
-            """
+        """Verify that mysql is restarted when the config is changed."""
+        sentry = self.mysql_sentry
+        service = 'mysql'
 
-        self.d.configure('mysql', {'dataset-size': '50%'})
+        # Expected default and alternate value
+        set_default = {'dataset-size': '80%'}
+        set_alternate = {'dataset-size': '50%'}
 
-        if not u.service_restarted(self.mysql_sentry, 'mysql',
-                                   '/etc/mysql/my.cnf',
-                                   sleep_time=30):
-            self.d.configure('mysql', {'dataset-size': '80%'})
-            message = "mysql service didn't restart after config change"
-            amulet.raise_status(amulet.FAIL, msg=message)
-        self.d.configure('mysql', {'dataset-size': '80%'})
+        # Config file affected by juju set config change 
+        conf_file = '/etc/mysql/my.cnf'
+
+        # Make config change, check for service restarts
+        u.log.debug('Making config change on {}...'.format(service))
+        self.d.configure(service, set_alternate)
+
+        u.log.debug('Checking that the service restarted: {}'.format(service))
+        if not u.service_restarted(sentry, service, conf_file, sleep_time=30):
+            self.d.configure(service, set_default)
+            msg = 'svc {} did not restart after config change'.format(service)
+            amulet.raise_status(amulet.FAIL, msg=msg)
+
+        self.d.configure(service, set_default)
+

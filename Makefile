@@ -7,7 +7,8 @@ virtualenv:
 	.venv/bin/pip install flake8 nose mock six
 
 lint: virtualenv
-	.venv/bin/flake8 --exclude hooks/charmhelpers hooks unit_tests tests
+	.venv/bin/flake8 --exclude hooks/charmhelpers,tests/charmhelpers \
+        hooks unit_tests tests
 	@charm proof
 
 test: virtualenv
