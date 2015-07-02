@@ -153,7 +153,7 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
         set_default = {'dataset-size': '80%'}
         set_alternate = {'dataset-size': '50%'}
 
-        # Config file affected by juju set config change 
+        # Config file affected by juju set config change
         conf_file = '/etc/mysql/my.cnf'
 
         # Make config change, check for service restarts
@@ -167,4 +167,3 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
             amulet.raise_status(amulet.FAIL, msg=msg)
 
         self.d.configure(service, set_default)
-
