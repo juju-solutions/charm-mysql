@@ -8,6 +8,7 @@ description: |
   ease of use.
 tags:
     - databases
+    - openstack
 provides:
   db:
     interface: mysql

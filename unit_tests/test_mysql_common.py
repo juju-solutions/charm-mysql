@@ -4,6 +4,10 @@ import sys
 
 sys.modules['MySQLdb'] = mock.Mock()
 
+# NOTE(beisner): unit tests should not attempt to actually apt-get install
+# anything.  By importing common here, __init__ tries to apt-get install
+# things, assuming sudo privs.  CI tests are not run with sudo (expect
+# this to fail).
 import common  # noqa
 
 

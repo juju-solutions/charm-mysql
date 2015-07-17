@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-"""Amulet tests on a basic mysql deployment on vivid-kilo."""
+"""Amulet tests on a basic mysql deployment on wily-liberty."""
 
 from basic_deployment import MySQLBasicDeployment
 
 if __name__ == '__main__':
-    deployment = MySQLBasicDeployment(series='vivid')
+    deployment = MySQLBasicDeployment(series='liberty')
     deployment.run_tests()
