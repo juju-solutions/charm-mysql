@@ -1,14 +1,22 @@
-#!/bin/bash
-
-set -ex
+#!/bin/bash -ex
 
 sudo add-apt-repository --yes ppa:juju/stable
 sudo apt-get update --yes
 sudo apt-get install --yes python-amulet \
-                           python3-pip \
-                           python-keystoneclient
+                           python-cinderclient \
+                           python-distro-info \
+                           python-glanceclient \
+                           python-heatclient \
+                           python-keystoneclient \
+                           python-neutronclient \
+                           python-novaclient \
+                           python-pika \
+                           python-swiftclient
 
-# Enable http proxy if AMULET_HTTP_PROXY is set
+# Setup for the generic 010-configs amulet test
+# PyMySQL not in main < Vivid, pip it instead
+
+# Enable http proxy if AMULET_HTTP_PROXY is set, for pipping.
 if [[ -n "$AMULET_HTTP_PROXY" ]]; then
   export HTTP_PROXY=$AMULET_HTTP_PROXY
   export HTTPS_PROXY=$(echo $AMULET_HTTP_PROXY | sed 's/http/https/g')
@@ -17,5 +25,5 @@ if [[ -n "$AMULET_HTTP_PROXY" ]]; then
   env | egrep "proxy|PROXY"
 fi
 
-# Setup for generic amulet test (Not in main < Vivid, pip it instead)
+sudo apt-get install --yes python3-pip
 sudo -E pip3 install PyMySQL
