@@ -4,7 +4,8 @@ export PYTHONPATH := hooks
 
 virtualenv:
 	virtualenv .venv
-	.venv/bin/pip install flake8 nose mock six pyyaml netifaces netaddr
+	.venv/bin/pip install flake8 nose coverage mock six pyyaml \
+        netifaces netaddr
 
 lint: virtualenv
 	.venv/bin/flake8 --exclude hooks/charmhelpers,tests/charmhelpers \
@@ -13,7 +14,7 @@ lint: virtualenv
 
 test: virtualenv
 	@echo Starting tests...
-	@.venv/bin/nosetests --nologcapture unit_tests
+	@.venv/bin/nosetests --nologcapture --with-coverage unit_tests
 
 functional_test:
 	@echo Starting Amulet tests...
