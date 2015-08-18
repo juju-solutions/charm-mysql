@@ -4,7 +4,7 @@ export PYTHONPATH := hooks
 
 virtualenv:
 	virtualenv .venv
-	.venv/bin/pip install flake8 nose mock six
+	.venv/bin/pip install flake8 nose mock six pyyaml netifaces netaddr
 
 lint: virtualenv
 	.venv/bin/flake8 --exclude hooks/charmhelpers,tests/charmhelpers \
@@ -13,7 +13,6 @@ lint: virtualenv
 
 test: virtualenv
 	@echo Starting tests...
-	@sudo apt-get install python-six
 	@.venv/bin/nosetests --nologcapture unit_tests
 
 functional_test:
