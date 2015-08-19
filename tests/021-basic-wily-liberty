@@ -5,5 +5,5 @@
 from basic_deployment import MySQLBasicDeployment
 
 if __name__ == '__main__':
-    deployment = MySQLBasicDeployment(series='liberty')
+    deployment = MySQLBasicDeployment(series='wily')
     deployment.run_tests()
