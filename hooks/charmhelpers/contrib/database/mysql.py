@@ -1,13 +1,12 @@
 """Helper for working with a MySQL database"""
 import json
-import socket
 import re
 import sys
 import platform
 import os
 import glob
 
-from string import upper
+# from string import upper
 
 from charmhelpers.core.host import (
     mkdir,
@@ -144,12 +143,13 @@ class MySQLHelper(object):
                 log("Excluding %s from peer migration" % (f), level=DEBUG)
                 continue
 
-            _key = os.path.basename(f)
+            key = os.path.basename(f)
             with open(f, 'r') as passwd:
                 _value = passwd.read().strip()
 
             try:
-                peer_store(_key, _value)
+                peer_store(key, _value)
+
                 if self.delete_ondisk_passwd_file:
                     os.unlink(f)
             except ValueError:
@@ -187,19 +187,38 @@ class MySQLHelper(object):
 
         return _password
 
+    def passwd_keys(self, username):
+        """Generator to return keys used to store passwords in peer store.
+
+        NOTE: we support both legacy and new format to support mysql
+        charm prior to refactor. This is necessary to avoid LP 1451890.
+        """
+        keys = []
+        if username == 'mysql':
+            log("Bad username '%s'" % (username), level=WARNING)
+
+        if username:
+            # IMPORTANT: *newer* format must be returned first
+            keys.append('mysql-%s.passwd' % (username))
+            keys.append('%s.passwd' % (username))
+        else:
+            keys.append('mysql.passwd')
+
+        for key in keys:
+            yield key
+
     def get_mysql_password(self, username=None, password=None):
         """Retrieve, generate or store a mysql password for the provided
         username using peer relation cluster."""
         excludes = []
 
-        # First check peer relation
-        if username:
-            _key = 'mysql-{}.passwd'.format(username)
-        else:
-            _key = 'mysql.passwd'
-
+        # First check peer relation.
         try:
-            _password = peer_retrieve(_key)
+            for key in self.passwd_keys(username):
+                _password = peer_retrieve(key)
+                if _password:
+                    break
+
             # If root password available don't update peer relation from local
             if _password and not username:
                 excludes.append(self.root_passwd_file_template)
@@ -350,7 +369,7 @@ class PerconaClusterHelper(object):
                 key, mem = line.split(':', 2)
                 if key == 'MemTotal':
                     mtot, modifier = mem.strip().split(' ')
-                    return '%s%s' % (mtot, upper(modifier[0]))
+                    return '%s%s' % (mtot, modifier[0].upper())
 
     def parse_config(self):
         """Parse charm configuration and calculate values for config files."""
@@ -359,27 +378,35 @@ class PerconaClusterHelper(object):
         if 'max-connections' in config:
             mysql_config['max_connections'] = config['max-connections']
 
+        if 'wait-timeout' in config:
+            mysql_config['wait_timeout'] = config['wait-timeout']
+
+        if 'innodb-flush-log-at-trx-commit' in config:
+            mysql_config['innodb_flush_log_at_trx_commit'] = config['innodb-flush-log-at-trx-commit']
+
         # Set a sane default key_buffer size
         mysql_config['key_buffer'] = self.human_to_bytes('32M')
         total_memory = self.human_to_bytes(self.get_mem_total())
 
-        log("Option 'dataset-size' has been deprecated, instead by default %d%% of system \
-        available RAM will be used for innodb_buffer_pool_size allocation" %
-            (self.DEFAULT_INNODB_BUFFER_FACTOR * 100), level="WARN")
-
+        dataset_bytes = config.get('dataset-size', None)
         innodb_buffer_pool_size = config.get('innodb-buffer-pool-size', None)
 
         if innodb_buffer_pool_size:
             innodb_buffer_pool_size = self.human_to_bytes(
                 innodb_buffer_pool_size)
-
-            if innodb_buffer_pool_size > total_memory:
-                log("innodb_buffer_pool_size; {} is greater than system available memory:{}".format(
-                    innodb_buffer_pool_size,
-                    total_memory), level='WARN')
+        elif dataset_bytes:
+            log("Option 'dataset-size' has been deprecated, please use"
+                "innodb_buffer_pool_size option instead", level="WARN")
+            innodb_buffer_pool_size = self.human_to_bytes(
+                dataset_bytes)
         else:
             innodb_buffer_pool_size = int(
                 total_memory * self.DEFAULT_INNODB_BUFFER_FACTOR)
+
+        if innodb_buffer_pool_size > total_memory:
+            log("innodb_buffer_pool_size; {} is greater than system available memory:{}".format(
+                innodb_buffer_pool_size,
+                total_memory), level='WARN')
 
         mysql_config['innodb_buffer_pool_size'] = innodb_buffer_pool_size
         return mysql_config
