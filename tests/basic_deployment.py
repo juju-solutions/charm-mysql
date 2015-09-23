@@ -42,6 +42,8 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
         other_services = [{'name': 'keystone'}]
         super(MySQLBasicDeployment, self)._add_services(this_service,
                                                         other_services)
+        self.d.expose('keystone')
+        self.d.expose('mysql')
 
     def _add_relations(self):
         """Add all of the relations for the services."""
@@ -62,9 +64,15 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
     def _initialize_tests(self):
         """Perform final initialization before tests get run."""
         # Access the sentries for inspecting service units
-        self.mysql_sentry = self.d.sentry.unit['mysql/0']
-        self.keystone_sentry = self.d.sentry.unit['keystone/0']
+        self.mysql_sentry = self.d.sentry['mysql'][0]
+        self.keystone_sentry = self.d.sentry['keystone'][0]
 
+        self.keystone_sentry.run('open-port 5000')
+        self.keystone_sentry.run('open-port 35357')
+        self.keystone_sentry.run('open-port 8888')
+        self.keystone_sentry.run('open-port 35347')
+        self.keystone_sentry.run('open-port 4990')
+        self.mysql_sentry.run('open-port 3306')
         # Authenticate keystone admin
         self.keystone = u.authenticate_keystone_admin(self.keystone_sentry,
                                                       user='admin',
@@ -108,7 +116,7 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
         unit = self.mysql_sentry
         relation = ['shared-db', 'keystone:shared-db']
         expected_data = {
-            'allowed_units': 'keystone/0',
+            'allowed_units': self.keystone_sentry.info['unit_name'],
             'private-address': u.valid_ip,
             'password': u.not_null,
             'db_host': u.valid_ip
