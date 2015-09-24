@@ -189,9 +189,7 @@ class OpenStackAmuletUtils(AmuletUtils):
                                     tenant):
         """Authenticates admin user with the keystone admin endpoint."""
         self.log.debug('Authenticating keystone admin...')
-        unit = keystone_sentry
-        service_ip = unit.relation('shared-db',
-                                   'mysql:shared-db')['private-address']
+        service_ip = keystone_sentry.info['public-address']
         ep = "http://{}:35357/v2.0".format(service_ip.strip().decode('utf-8'))
         return keystone_client.Client(username=user, password=password,
                                       tenant_name=tenant, auth_url=ep)
