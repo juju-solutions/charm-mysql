@@ -26,13 +26,13 @@ except:
 
 
 # Allow connections from outside
-mysqlmaster = d.sentry.unit['mysql/0']
+mysqlmaster = d.sentry['mysql'][0]
 mysqlmaster.run(
     "echo 'GRANT ALL ON *.* to root@\"%\"'\""
     " IDENTIFIED BY '`cat /var/lib/mysql/mysql.passwd`'\"|"
     "mysql -u root --password=`cat /var/lib/mysql/mysql.passwd`"
 )
-mysql_server = d.sentry.unit['mysql/0']
+mysql_server = d.sentry['mysql'][0]
 mysql_password = mysql_server.file_contents('/var/lib/mysql/mysql.passwd')
 
 connections = []
