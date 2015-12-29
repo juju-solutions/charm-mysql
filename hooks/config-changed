@@ -158,6 +158,11 @@ if 'InnoDB' in preferred_engines:
     configs['innodb-buffer-pool-size'] = chunk_size
     if configs['tuning-level'] == 'fast':
         configs['innodb-flush-log-at-trx-commit']=2
+    if configs['file-per-table'] == True:
+        configs['innodb-file-per-table'] = 'innodb_file_per_table'
+    else
+        configs['innodb-file-per-table'] = ''
+
 else:
     configs['innodb-buffer-pool-size'] = 0
 
@@ -301,6 +306,7 @@ max_binlog_size         = 100M
 # InnoDB is enabled by default with a 10MB datafile in /var/lib/mysql/.
 # Read the manual for more InnoDB related options. There are many!
 #
+%(innodb-file-per-table)s
 innodb_buffer_pool_size = %(innodb-buffer-pool-size)s
 innodb_flush_log_at_trx_commit = %(innodb-flush-log-at-trx-commit)s
 sync_binlog = %(sync-binlog)s
