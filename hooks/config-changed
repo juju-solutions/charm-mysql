@@ -158,7 +158,6 @@ if 'InnoDB' in preferred_engines:
     configs['innodb-buffer-pool-size'] = chunk_size
     if configs['tuning-level'] == 'fast':
         configs['innodb-flush-log-at-trx-commit']=2
-
 else:
     configs['innodb-buffer-pool-size'] = 0
 
