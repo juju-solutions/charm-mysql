@@ -139,10 +139,3 @@ options:
         default: 7
         type: int
         description: Number of recent backups to retain.
-    file_per_table:
-        type: boolean
-        default: False
-        description: |
-          MySQL will by default store all InnoDB data in one huge file which
-          can never be trimmed. This option allows the user to separate their
-          data into smaller individual files via innodb_file_per_table.
