@@ -155,7 +155,8 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
     def test_900_restart_on_config_change(self):
         """Verify that mysql is restarted when the config is changed."""
         sentry = self.mysql_sentry
-        service = 'mysql'
+        service = 'mysqld'
+        juju_service = 'mysql'
 
         # Expected default and alternate value
         set_default = {'dataset-size': '80%'}
@@ -165,13 +166,15 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
         conf_file = '/etc/mysql/my.cnf'
 
         # Make config change, check for service restarts
-        u.log.debug('Making config change on {}...'.format(service))
-        self.d.configure(service, set_alternate)
+        u.log.debug('Making config change on {}...'.format(juju_service))
+        mtime = u.get_sentry_time(sentry)
+        self.d.configure(juju_service, set_alternate)
 
         u.log.debug('Checking that the service restarted: {}'.format(service))
-        if not u.service_restarted(sentry, service, conf_file, sleep_time=30):
-            self.d.configure(service, set_default)
-            msg = 'svc {} did not restart after config change'.format(service)
+        if not u.validate_service_config_changed(sentry, mtime,
+                                                 service, conf_file):
+            self.d.configure(juju_service, set_default)
+            msg = "svc {} did not restart after config change".format(service)
             amulet.raise_status(amulet.FAIL, msg=msg)
 
-        self.d.configure(service, set_default)
+        self.d.configure(juju_service, set_default)
