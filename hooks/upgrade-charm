@@ -25,3 +25,5 @@ fi
 
 $home/install
 exec $home/config-changed
+
+open-port 3306
