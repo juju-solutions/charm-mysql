@@ -33,16 +33,16 @@ if os.path.isdir('exec.d'):
 
 apt_install(['debconf-utils', 'python-mysqldb', 'uuid', 'pwgen', 'dnsutils'])
 
-PASSFILE = os.path.join('/var', 'lib', 'mysql', 'mysql.passwd')
-if not os.path.isfile(PASSFILE):
-    dirname = os.path.dirname(PASSFILE)
+ROOT_PASSFILE = os.path.join('/root', 'mysql.passwd')
+if not os.path.isfile(ROOT_PASSFILE):
+    dirname = os.path.dirname(ROOT_PASSFILE)
     if not os.path.isdir(dirname):
         os.mkdir(dirname)
-    with open(PASSFILE, 'w'):
+    with open(ROOT_PASSFILE, 'w'):
         pass
 
-os.chmod(PASSFILE, 0600)
-with open(PASSFILE, 'a') as fd:
+os.chmod(ROOT_PASSFILE, 0600)
+with open(ROOT_PASSFILE, 'a') as fd:
     fd.seek(0, os.SEEK_END)
     if fd.tell() == 0:
         fd.seek(0)
