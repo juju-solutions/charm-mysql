@@ -6,6 +6,7 @@ import json
 import re
 import hashlib
 import os
+import shutil
 import sys
 import platform
 import lib.utils as utils
@@ -111,7 +112,14 @@ for source in apt_sources:
     check_call(['add-apt-repository','-y','deb http://%s %s main' % (source, series)])
     check_call(['apt-get','update'])
 
-with open('/var/lib/mysql/mysql.passwd','r') as rpw:
+ROOT_PASSFILE = os.path.join('/root', 'mysql.passwd')
+VAR_PASSFILE = os.path.join('/var', 'lib', 'mysql', 'mysql.passwd')
+if os.path.isfile(ROOT_PASSFILE):
+    PASSFILE = ROOT_PASSFILE
+else:
+    PASSFILE = VAR_PASSFILE
+    
+with open(PASSFILE,'r') as rpw:
     root_pass = rpw.read()
 
 dconf = Popen(['debconf-set-selections'], stdin=PIPE)
@@ -123,6 +131,10 @@ dconf.wait()
 if len(remove_pkgs):
     check_call(['apt-get','-y','remove'] + remove_pkgs)
 apt_install(package)
+
+# mysql.passwd was stored in /root till after pkg install due to Bug #1567778
+if os.path.isfile(ROOT_PASSFILE):
+    shutil.move(ROOT_PASSFILE, VAR_PASSFILE)
 
 # smart-calc stuff in the configs
 dataset_bytes = human_to_bytes(configs['dataset-size'])
