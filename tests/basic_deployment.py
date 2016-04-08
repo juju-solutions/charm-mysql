@@ -86,6 +86,9 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
             self.mysql_sentry: ['mysql'],
             self.keystone_sentry: ['keystone']
         }
+        if self._get_openstack_release() >= self.trusty_liberty:
+            services[self.keystone_sentry] = ['apache2']
+
         ret = u.validate_services_by_name(services)
         if ret:
             amulet.raise_status(amulet.FAIL, msg=ret)
@@ -94,9 +97,14 @@ class MySQLBasicDeployment(OpenStackAmuletDeployment):
         """Verify that the user table in the keystone mysql database
            contains an admin user with a specific email address."""
 
-        cmd = ("export FOO=$(sudo cat /var/lib/mysql/mysql.passwd);"
-               "mysql -u root -p$FOO -e "
-               "\"SELECT extra FROM keystone.user WHERE name='admin';\"")
+        if self._get_openstack_release() >= self.trusty_mitaka:
+            query = ("SELECT extra FROM local_user, user WHERE "
+                     "local_user.user_id = user.id;")
+        else:
+            query = ("SELECT extra FROM user WHERE name='admin'")
+
+        cmd = ('export FOO=$(sudo cat /var/lib/mysql/mysql.passwd);'
+               'mysql -u root -p$FOO -D keystone -e "{}"').format(query)
 
         output, retcode = self.mysql_sentry.run(cmd)
         u.log.debug('command: `{}` returned {}'.format(cmd, retcode))
