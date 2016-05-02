@@ -148,7 +148,9 @@ def get_unit_hostname():
     return socket.gethostname()
 
 
-def get_host_ip(hostname=unit_get('private-address')):
+def get_host_ip(hostname=None):
+    if hostname is None:
+        hostname = unit_get('private-address')
     try:
         # Test to see if already an IPv4 address
         socket.inet_aton(hostname)
