@@ -1,30 +1,63 @@
 #!/bin/bash -ex
 
-sudo add-apt-repository --yes ppa:juju/stable
-sudo apt-get update --yes
-sudo apt-get install --yes amulet \
-                           distro-info-data \
-                           python-cinderclient \
-                           python-distro-info \
-                           python-glanceclient \
-                           python-heatclient \
-                           python-keystoneclient \
-                           python-neutronclient \
-                           python-novaclient \
-                           python-pika \
-                           python-swiftclient
+deps=(amulet
+      distro-info-data
+      python-cinderclient
+      python-distro-info
+      python-glanceclient
+      python-heatclient
+      python-keystoneclient
+      python-neutronclient
+      python-novaclient
+      python-pika
+      python-swiftclient
+      python3-pip)
 
-# Setup for the generic 010-configs amulet test
-# PyMySQL not in main < Vivid, pip it instead
 
-# Enable http proxy if AMULET_HTTP_PROXY is set, for pipping.
-if [[ -n "$AMULET_HTTP_PROXY" ]]; then
-  export HTTP_PROXY=$AMULET_HTTP_PROXY
-  export HTTPS_PROXY=$(echo $AMULET_HTTP_PROXY | sed 's/http/https/g')
-  export http_proxy=$HTTP_PROXY
-  export https_proxy=$HTTPS_PROXY
-  env | egrep "proxy|PROXY"
+function check_apt_packages() {
+  for dep in $deps; do
+    if ! dpkg -l $dep 2> /dev/null | grep -q '^ii '; then
+      return 1
+    fi
+  done
+}
+
+
+function install_apt_packages() {
+  sudo add-apt-repository --yes ppa:juju/stable
+  sudo apt-get update --yes
+  sudo apt-get install --yes "${deps[@]}"
+}
+
+
+function check_python_packages() {
+  if pip3 list | grep -q PyMySQL; then
+    return 1
+  fi
+}
+
+
+function install_python_packages() {
+  # Setup for the generic 010-configs amulet test
+  # PyMySQL not in main < Vivid, pip it instead
+
+  # Enable http proxy if AMULET_HTTP_PROXY is set, for pipping.
+  if [[ -n "$AMULET_HTTP_PROXY" ]]; then
+    export HTTP_PROXY=$AMULET_HTTP_PROXY
+    export HTTPS_PROXY=$(echo $AMULET_HTTP_PROXY | sed 's/http/https/g')
+    export http_proxy=$HTTP_PROXY
+    export https_proxy=$HTTPS_PROXY
+    env | egrep "proxy|PROXY"
+  fi
+
+  sudo -E pip3 install PyMySQL
+}
+
+
+if ! check_apt_packages; then
+  install_apt_packages
 fi
 
-sudo apt-get install --yes python3-pip
-sudo -E pip3 install PyMySQL
+if ! check_python_packages; then
+  install_python_packages
+fi
