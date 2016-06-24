@@ -9,6 +9,9 @@ description: |
 tags:
     - databases
     - openstack
+series:
+  - trusty
+  - precise
 provides:
   db:
     interface: mysql
