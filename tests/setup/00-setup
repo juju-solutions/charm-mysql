@@ -30,13 +30,6 @@ function install_apt_packages() {
 }
 
 
-function check_python_packages() {
-  if pip3 list | grep -q PyMySQL; then
-    return 1
-  fi
-}
-
-
 function install_python_packages() {
   # Setup for the generic 010-configs amulet test
   # PyMySQL not in main < Vivid, pip it instead
@@ -58,6 +51,4 @@ if ! check_apt_packages; then
   install_apt_packages
 fi
 
-if ! check_python_packages; then
-  install_python_packages
-fi
+install_python_packages
