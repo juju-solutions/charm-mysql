@@ -13,7 +13,6 @@ max_connections = 10
 d = amulet.Deployment(series='trusty')
 
 d.add('mysql')
-d.configure('mysql', {'max-connections': max_connections})
 d.expose('mysql')
 
 try:
@@ -24,6 +23,8 @@ except amulet.helpers.TimeoutError:
 except:
     raise
 
+d.configure('mysql', {'max-connections': max_connections})
+d.sentry.wait()
 
 # Allow connections from outside
 mysqlmaster = d.sentry['mysql'][0]
