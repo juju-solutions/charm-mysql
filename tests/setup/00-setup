@@ -1,17 +1,6 @@
 #!/bin/bash -ex
 
-deps=(amulet
-      distro-info-data
-      python-cinderclient
-      python-distro-info
-      python-glanceclient
-      python-heatclient
-      python-keystoneclient
-      python-neutronclient
-      python-novaclient
-      python-pika
-      python-swiftclient
-      python3-pip)
+deps=(amulet distro-info-data python3-pip)
 
 
 function check_apt_packages() {
