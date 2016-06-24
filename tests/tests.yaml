@@ -1,4 +1,3 @@
-# tests: "0([0-9]+)-((setup|configs)|basic-(precise|trusty)-(icehouse|juno|kilo))"
-tests: "0*"
 setup:
   - "tests/setup/00-setup"
+reset: false
