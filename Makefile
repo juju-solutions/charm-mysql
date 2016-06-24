@@ -5,7 +5,7 @@ export PYTHONPATH := hooks
 virtualenv:
 	virtualenv .venv
 	.venv/bin/pip install flake8 nose coverage mock six pyyaml \
-        netifaces netaddr
+        netifaces netaddr pymysql
 
 lint: virtualenv
 	.venv/bin/flake8 --exclude hooks/charmhelpers,tests/charmhelpers \
