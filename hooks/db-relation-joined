@@ -38,7 +38,7 @@ if slave and not admin:
 else:
     if admin:
         runsql(
-            "grant all privileges on *.* to `%s` identified by '%s'" % (
+            "grant all privileges on *.* to `%s` identified by '%s' with grant option" % (
             user,
             service_password))
     else:
