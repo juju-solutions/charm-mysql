@@ -16,10 +16,12 @@ from charmhelpers.fetch import (
     apt_update,
     apt_install
 )
-from charmhelpers.core.hookenv import relations_of_type
+from charmhelpers.core.hookenv import relations_of_type, status_set
 from charmhelpers.core.host import mkdir, rsync
 from charmhelpers.core.templating import render
 
+
+status_set('maintenance', 'Configuring MySQL')
 
 # Add archive source if provided
 add_source(utils.config_get('source'), utils.config_get('key'))
@@ -118,7 +120,7 @@ if os.path.isfile(ROOT_PASSFILE):
     PASSFILE = ROOT_PASSFILE
 else:
     PASSFILE = VAR_PASSFILE
-    
+
 with open(PASSFILE,'r') as rpw:
     root_pass = rpw.read()
 
@@ -426,3 +428,5 @@ else:
     for path in ["/etc/cron.d/mysql_backup", "/usr/local/bin/mysql_backup.sh"]:
         if os.path.exists(path):
             os.unlink(path)
+
+status_set('active', 'Ready')
