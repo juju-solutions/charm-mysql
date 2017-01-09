@@ -4,3 +4,9 @@ set -e
 
 service mysql restart
 open-port 3306
+
+version=$(mysql --version|awk '{ print $5 }'|awk -F\, '{ print $1 }')
+
+application-version-set $version || true
+
+status-set active Ready

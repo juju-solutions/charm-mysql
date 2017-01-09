@@ -11,7 +11,10 @@ from charmhelpers.fetch import (
     add_source
 )
 
+from charmhelpers.core import hookenv
 
+
+hookenv.status_set('maintenance', 'Setting up additional sources')
 # Add archive source of provided
 add_source(utils.config_get('source'), utils.config_get('key'))
 apt_update()
@@ -31,6 +34,7 @@ if os.path.isdir('exec.d'):
     # Update again in case any pre-exec script(s) modified sources.
     apt_update()
 
+hookenv.status_set('maintenance', 'Installing support packages')
 apt_install(['debconf-utils', 'python-mysqldb', 'uuid', 'pwgen', 'dnsutils'])
 
 ROOT_PASSFILE = os.path.join('/root', 'mysql.passwd')
