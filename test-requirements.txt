@@ -1,0 +1,13 @@
+path.py<=8.1.2
+PyYAML<=3.11
+flake8
+nose
+coverage
+mock
+six
+netifaces
+netaddr
+pymysql
+bundletester
+amulet
+charm-tools

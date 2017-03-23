@@ -1,3 +1,5 @@
 setup:
   - "tests/setup/00-setup"
 reset: false
+# avoid running lint/unit tests multiple times
+makefile: []
