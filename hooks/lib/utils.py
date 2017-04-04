@@ -40,6 +40,7 @@ def install(*pkgs):
         cmd.append(pkg)
     subprocess.check_call(cmd)
 
+
 try:
     import dns.resolver
 except ImportError:

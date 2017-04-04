@@ -3,23 +3,30 @@ PYTHON := /usr/bin/env python
 export PYTHONPATH := hooks
 
 virtualenv:
-	virtualenv .venv
-	.venv/bin/pip install flake8 nose coverage mock six pyyaml \
-        netifaces netaddr pymysql
+	@if [ ! -d .venv ]; then \
+	    virtualenv .venv; \
+	    . .venv/bin/activate && \
+	    .venv/bin/pip install -U pip; \
+	    . .venv/bin/activate && \
+	    .venv/bin/pip install -r test-requirements.txt; \
+	fi
+
 
 lint: virtualenv
-	.venv/bin/flake8 --exclude hooks/charmhelpers,tests/charmhelpers \
-        hooks unit_tests tests
-	@charm proof
+	@. .venv/bin/activate && \
+	    .venv/bin/flake8 --exclude hooks/charmhelpers,tests/charmhelpers \
+                hooks unit_tests tests
+	@. .venv/bin/activate && .venv/bin/charm-proof
 
 test: virtualenv
 	@echo Starting tests...
-	@.venv/bin/nosetests --nologcapture --with-coverage unit_tests
+	@. .venv/bin/activate && \
+	    .venv/bin/nosetests --nologcapture --with-coverage unit_tests
 
-functional_test:
+functional_test: virtualenv
 	@echo Starting Amulet tests...
-	@tests/setup/00-setup
-	@juju test -v -p AMULET_HTTP_PROXY,AMULET_OS_VIP --timeout 2700
+	@. .venv/bin/activate && \
+            .venv/bin/bundletester -vl DEBUG --test-pattern gate-basic-*
 
 bin/charm_helpers_sync.py:
 	@mkdir -p bin

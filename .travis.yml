@@ -1,0 +1,40 @@
+sudo: required
+dist: trusty
+language: python
+env:
+ - UNIT_TEST=1
+ - AMULET_TEST=gate-basic-precise
+ - AMULET_TEST=gate-basic-trusty
+ - AMULET_TEST=gate-basic-xenial
+ - AMULET_TEST=gate-basic-yakkety
+script:
+ - if [ ! -z ${UNIT_TEST} ]; then make lint; fi
+ - if [ ! -z ${UNIT_TEST} ]; then make test; fi
+# setup dependencies here to save time on simpler test envs
+# upgrade python 2.7 to mitigate juju-deployer ssl.SSLError
+# sudo back to ourself to activate lxd group membership
+ - if [ ! -z ${AMULET_TEST} ]; then
+    sudo add-apt-repository -y ppa:ubuntu-lxc/lxd-stable;
+    sudo add-apt-repository -y ppa:juju/stable;
+    sudo add-apt-repository -y ppa:fkrull/deadsnakes-python2.7;
+    sudo apt-get -qq update;
+    sudo apt-get -y install lxd juju python-tox libpython2.7 libpython2.7-dev libpython2.7-minimal libpython2.7-stdlib python-crypto python-pkg-resources python-yaml python2.7 python2.7-dev python2.7-minimal;
+    sudo lxd init --auto;
+    sudo usermod -a -G lxd travis;
+    sudo su travis -c 'lxc network create lxdbr0';
+    sudo su travis -c 'lxc network attach-profile lxdbr0 default eth0';
+    sudo su travis -c 'juju bootstrap localhost';
+    make virtualenv;
+   fi
+ - if [ ! -z ${AMULET_TEST} ]; then
+    sudo su travis -c '. .venv/bin/activate && bundletester -vl DEBUG 
+                      --test-pattern "${AMULET_TEST}*"';
+   fi
+ - if [ ! -z ${AMULET_TEST} ]; then sudo su travis -c 'juju status'; fi
+ - if [ ! -z ${AMULET_TEST} ]; then
+    sudo su travis -c \
+       'juju ssh mysql/0 sudo cat /var/log/juju/unit-mysql-0.log';
+   fi
+ - if [ ! -z ${AMULET_TEST} ]; then
+    sudo su travis -c 'juju ssh mysql/0 sudo cat /var/log/mysql/error.log';
+   fi
