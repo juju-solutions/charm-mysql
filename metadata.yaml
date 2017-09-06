@@ -10,10 +10,9 @@ tags:
     - databases
     - openstack
 series:
-  - yakkety
+  - zesty
   - xenial
   - trusty
-  - precise
 provides:
   db:
     interface: mysql
