@@ -21,9 +21,9 @@ Once deployed, you can retrieve the MySQL root user password by logging in to th
 
 The charm supports simple backups. To enable them set `backup_schedule` option. Optionally you can override default `backup_dir` and/or `backup_retention_count`:
 
-    juju set mysql backup_schedule="45 5 * * *" # cron formatted schedule
-    juju set mysql backup_dir="/mnt/backup"
-    juju set mysql backup_retention_count=28
+    juju config mysql backup_schedule="45 5 * * *" # cron formatted schedule
+    juju config mysql backup_dir="/mnt/backup"
+    juju config mysql backup_retention_count=28
 
 # Scale Out Usage 
 
@@ -83,24 +83,24 @@ You can tweak various options to optimize your MySQL deployment:
 
 Each of these can be applied by running:
 
-    juju set <service> <option>=<value>
+    juju config <service> <option>=<value>
 
 e.g.
 
-    juju set mysql preferred-storage-engine=InnoDB
-    juju set mysql dataset-size=50%
-    juju set mysql query-cache-type=ON
-    juju set mysql query-cache-size=-1
+    juju config mysql preferred-storage-engine=InnoDB
+    juju config mysql dataset-size=50%
+    juju config mysql query-cache-type=ON
+    juju config mysql query-cache-size=-1
 
 Deploying Percona Server is an option in this charm, you can do so by editing the `flavor` option:
 
-    juju set mysql flavor=percona
+    juju config mysql flavor=percona
 
 WARNING: Migrating from MySQL to Percona Server in this fashion is currently a one-way migration, once you migrate you cannot migrate back via Juju. 
 
 To change the source that the charm uses for packages:
 
-  juju set mysql source="cloud:precise-icehouse"
+  juju config mysql source="cloud:precise-icehouse"
 
 This will enable the Icehouse pocket of the Cloud Archive and upgrade the install of any 'cloud' packages to the new version.
 
@@ -111,18 +111,18 @@ The source option can be used in a few different ways:
 
 The charm also supports use of arbitary archive key's for use with private repositories:
 
-  juju set mysql key="C6CEA0C9"
+  juju config mysql key="C6CEA0C9"
 
 Note that in clustered configurations, the upgrade can be a bit racey as the services restart and re-cluster; this is resolvable using:
 
-  juju resolved --retry mysql/1
+  juju resolved mysql/1
 
 # Caveats 
 
 When deploying MySQL on the local provider, there is a known memory exhaustion issue. To work around this until the issue is patched:
 
-    juju set mysql dataset-size='512M'
-    juju resolved -r mysql/#
+    juju config mysql dataset-size='512M'
+    juju resolved mysql/#
 
 # MySQL and Percona Server Contact Information
 
