@@ -11,7 +11,10 @@ from charmhelpers.fetch import (
     add_source
 )
 
-from charmhelpers.core import hookenv
+from charmhelpers.core import hookenv, host
+from charmhelpers.core.templating import render
+
+
 
 
 hookenv.status_set('maintenance', 'Setting up additional sources')
@@ -51,3 +54,9 @@ with open(ROOT_PASSFILE, 'a') as fd:
     if fd.tell() == 0:
         fd.seek(0)
         fd.write(str(uuid.uuid4()))
+                
+# install limits.conf file to a systemd's mysql service unit
+# to allow configuring more than 214 connections in mysql
+if host.init_is_systemd():
+    render('limits.j2', '/etc/systemd/system/mysql.service.d/limits.conf',
+        context={})
