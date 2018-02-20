@@ -17,5 +17,5 @@
 from basic_deployment import MySQLBasicDeployment
 
 if __name__ == '__main__':
-    deployment = MySQLBasicDeployment(series='zesty')
+    deployment = MySQLBasicDeployment(series='artful')
     deployment.run_tests()
