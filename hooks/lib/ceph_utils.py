@@ -236,7 +236,7 @@ def place_data_on_ceph(service, blk_device, data_src_dst, fstype='ext4'):
     # copy data to /mnt
     try:
         copy_files(data_src_dst, '/mnt')
-    except:
+    except (IOError, OSError, shutil.Error):
         pass
 
     # umount block device
