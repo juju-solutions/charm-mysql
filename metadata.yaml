@@ -10,7 +10,7 @@ tags:
     - databases
     - openstack
 series:
-  - zesty
+  - artful
   - xenial
   - trusty
 provides:

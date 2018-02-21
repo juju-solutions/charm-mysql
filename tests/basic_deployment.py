@@ -75,7 +75,7 @@ class MySQLBasicDeployment(AmuletDeployment):
                 password=mysql_password,
                 host=mysql_server.info['public-address'],
                 database='mysql')
-        except:
+        except pymysql.OperationalError:
             amulet.raise_status(amulet.FAIL, msg='Unable to connect to MySQL')
         self.log.info('OK')
 
