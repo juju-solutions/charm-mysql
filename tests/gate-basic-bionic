@@ -17,5 +17,5 @@
 from basic_deployment import MySQLBasicDeployment
 
 if __name__ == '__main__':
-    deployment = MySQLBasicDeployment(series='artful')
+    deployment = MySQLBasicDeployment(series='bionic')
     deployment.run_tests()
