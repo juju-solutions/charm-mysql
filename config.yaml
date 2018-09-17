@@ -84,7 +84,7 @@ options:
           your ceph cluster).
     source:
         type: string
-        default:
+        default: ''
         description: |
           Optional configuration to support use of additional sources such as:
           .
@@ -96,7 +96,7 @@ options:
           option.
     key:
         type: string
-        default:
+        default: ''
         description: |
           Key ID to import to the apt keyring to support use with arbitary source
           configuration from outside of Launchpad archives or PPA's.

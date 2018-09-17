@@ -5,7 +5,7 @@ env:
  - UNIT_TEST=1
  - AMULET_TEST=gate-basic-trusty
  - AMULET_TEST=gate-basic-xenial
- - AMULET_TEST=gate-basic-artful
+ - AMULET_TEST=gate-basic-bionic
 script:
  - if [ ! -z ${UNIT_TEST} ]; then make lint; fi
  - if [ ! -z ${UNIT_TEST} ]; then make test; fi
