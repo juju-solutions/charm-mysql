@@ -1,2 +1,7 @@
+bin
+.coverage
 .project
+*.pyc
+__pycache__
 .pydevproject
+.venv
