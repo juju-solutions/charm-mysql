@@ -1,5 +1,5 @@
 sudo: required
-dist: trusty
+dist: xenial
 language: python
 env:
  - UNIT_TEST=1
@@ -14,7 +14,6 @@ script:
 # wait for lxd socket to be ready after snap installation
 # sudo back to ourself to activate lxd group membership
  - if [ ! -z ${AMULET_TEST} ]; then
-    sudo add-apt-repository -y ppa:fkrull/deadsnakes-python2.7;
     sudo apt-get -qq update;
     sudo apt-get -y --allow-unauthenticated install snapd python-tox libpython2.7 libpython2.7-dev libpython2.7-minimal libpython2.7-stdlib python-crypto python-pkg-resources python-yaml python2.7 python2.7-dev python2.7-minimal;
     sudo snap install lxd;
