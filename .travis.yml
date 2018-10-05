@@ -11,6 +11,7 @@ script:
  - if [ ! -z ${UNIT_TEST} ]; then make test; fi
 # setup dependencies here to save time on simpler test envs
 # upgrade python 2.7 to mitigate juju-deployer ssl.SSLError
+# ensure we use lxd snap and get rid of any lxd apt pkgs
 # wait for lxd socket to be ready after snap installation
 # sudo back to ourself to activate lxd group membership
  - if [ ! -z ${AMULET_TEST} ]; then
@@ -19,7 +20,6 @@ script:
     sudo snap install lxd;
     sudo snap install juju --classic;
     sudo sh -c 'echo PATH=/snap/bin:$PATH >> /etc/environment';
-    # ensure we use lxd snap and get rid of any lxd apt pkgs
     sudo sh -c 'lxd.migrate -yes'
     while [ ! -S /var/snap/lxd/common/lxd/unix.socket ]; do echo "Waiting for LXD socket...";sleep 0.2;done;
     sudo sh -c 'lxd init --auto';
