@@ -1,5 +1,5 @@
 sudo: required
-dist: trusty
+dist: xenial
 language: python
 env:
  - UNIT_TEST=1
@@ -11,23 +11,23 @@ script:
  - if [ ! -z ${UNIT_TEST} ]; then make test; fi
 # setup dependencies here to save time on simpler test envs
 # upgrade python 2.7 to mitigate juju-deployer ssl.SSLError
+# ensure we use lxd snap and get rid of any lxd apt pkgs
 # wait for lxd socket to be ready after snap installation
 # sudo back to ourself to activate lxd group membership
  - if [ ! -z ${AMULET_TEST} ]; then
-    sudo add-apt-repository -y ppa:fkrull/deadsnakes-python2.7;
     sudo apt-get -qq update;
     sudo apt-get -y --allow-unauthenticated install snapd python-tox libpython2.7 libpython2.7-dev libpython2.7-minimal libpython2.7-stdlib python-crypto python-pkg-resources python-yaml python2.7 python2.7-dev python2.7-minimal;
+    sudo apt-get -y remove lxc* lxd*;
     sudo snap install lxd;
     sudo snap install juju --classic;
     sudo sh -c 'echo PATH=/snap/bin:$PATH >> /etc/environment';
-    while [ ! -S /var/snap/lxd/common/lxd/unix.socket ]; do echo "Waiting for LXD socket...";sleep 0.2;done;
-    sudo lxd init --auto;
+    while [ ! -S /var/snap/lxd/common/lxd/unix.socket ]; do echo "Waiting for LXD socket..."; sleep 0.2; done;
+    sudo sh -c 'lxd init --auto';
     sudo usermod -a -G lxd travis;
-    sudo su travis -c 'lxc network create lxdbr0';
-    sudo su travis -c 'lxc network attach-profile lxdbr0 default eth0';
-    sudo su travis -c 'juju bootstrap localhost';
+    sudo su travis -c 'lxc network set lxdbr0 ipv6.address none';
     make virtualenv;
    fi
+ - if [ ! -z ${AMULET_TEST} ]; then sudo su travis -c 'juju bootstrap localhost'; fi
  - if [ ! -z ${AMULET_TEST} ]; then
     sudo su travis -c '. .venv/bin/activate && bundletester -vl DEBUG 
                       --test-pattern "${AMULET_TEST}*"';

@@ -1,4 +1,4 @@
-path.py<=8.1.2
+path.py
 PyYAML<=3.11
 flake8
 nose
