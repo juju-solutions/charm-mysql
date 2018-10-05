@@ -3,20 +3,17 @@
 #
 # Copyright 2014-2015 Canonical Limited.
 #
-# This file is part of charm-helpers.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# charm-helpers is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License version 3 as
-# published by the Free Software Foundation.
+#  http://www.apache.org/licenses/LICENSE-2.0
 #
-# charm-helpers is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with charm-helpers.  If not, see <http://www.gnu.org/licenses/>.
-#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 # Authors:
 #  Kapil Thangavelu <kapil.foss@gmail.com>
@@ -169,6 +166,10 @@ class Storage(object):
 
     To support dicts, lists, integer, floats, and booleans values
     are automatically json encoded/decoded.
+
+    Note: to facilitate unit testing, ':memory:' can be passed as the
+    path parameter which causes sqlite3 to only build the db in memory.
+    This should only be used for testing purposes.
     """
     def __init__(self, path=None):
         self.db_path = path
@@ -178,6 +179,9 @@ class Storage(object):
             else:
                 self.db_path = os.path.join(
                     os.environ.get('CHARM_DIR', ''), '.unit-state.db')
+        if self.db_path != ':memory:':
+            with open(self.db_path, 'a') as f:
+                os.fchmod(f.fileno(), 0o600)
         self.conn = sqlite3.connect('%s' % self.db_path)
         self.cursor = self.conn.cursor()
         self.revision = None
@@ -361,7 +365,7 @@ class Storage(object):
         try:
             yield self.revision
             self.revision = None
-        except:
+        except Exception:
             self.flush(False)
             self.revision = None
             raise
