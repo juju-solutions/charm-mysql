@@ -36,3 +36,10 @@ bin/charm_helpers_sync.py:
 sync: bin/charm_helpers_sync.py
 	$(PYTHON) bin/charm_helpers_sync.py -c charm-helpers.yaml
 	$(PYTHON) bin/charm_helpers_sync.py -c charm-helpers-tests.yaml
+
+.PHONY: clean
+clean:
+	@rm -f .coverage
+	@rm -rf .venv
+	@find . -name "*.pyc" -type f -exec rm -f '{}' \;
+	@find . -name "__pycache__" -type d -prune -exec rm -rf '{}' \;
