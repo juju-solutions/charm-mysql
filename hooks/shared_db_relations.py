@@ -33,8 +33,7 @@ def relation_get():
 
 def unit_sorted(units):
     """Return a sorted list of unit names."""
-    return sorted(
-        units, lambda a, b: cmp(int(a.split('/')[-1]), int(b.split('/')[-1])))
+    return sorted(units, lambda name: int(name.split('/')[-1]))
 
 
 def get_unit_addr(relid, unitid):
