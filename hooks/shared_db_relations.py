@@ -9,6 +9,7 @@
 
 import subprocess
 import json
+from collections import defaultdict
 import lib.utils as utils
 import lib.cluster_utils as cluster
 
@@ -108,11 +109,9 @@ def shared_db_changed():
         #    }
         # }
         #
-        databases = {}
+        databases = defaultdict(dict)
         for k, v in settings.items():
             db, x = k.split('_', 1)
-            if db not in databases:
-                databases[db] = {}
             databases[db][x] = v
 
         return_data = {}
