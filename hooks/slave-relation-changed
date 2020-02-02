@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -24,17 +24,45 @@ for setting in user password hostname port dumpurl; do
     eval $setting=$value
 done
 
+if [ -z "$serverid" ] ; then
+  serverid=`echo $JUJU_UNIT_NAME | cut -d/ -f2`
+fi
+# add 1001 to server_id to avoid conflicts w/ masters - master will be 1000, most likely
+# this is super fragile setup, but... :) 
+serverid=$(($serverid+1001))
+
+if [ -f /etc/mysql/conf.d/slave.cf ] ; then
+    old_hash=`md5sum /etc/mysql/conf.d/slave.cf`
+else
+    old_hash="xxx"
+fi
+
+# trusty/xenial issues? 
+binlogconf="/etc/mysql/conf.d/binlog.cnf"
+if [[ ! -f "$binlogconf" ]]; then
+  binlogconf="/etc/mysql/mysql.conf.d/binlog.cnf"
+fi
+
+cat > $binlogconf <<EOF
+[mysqld]
+server-id = $serverid
+report-host = %JUJU_UNIT_NAME%
+log_bin = /var/log/mysql/mysql-bin.log
+EOF
+sed -e "s#%JUJU_UNIT_NAME%#$JUJU_UNIT_NAME#g" $binlogconf
+
+new_hash=$(md5sum $binlogconf)
+if [ "$new_hash" != "$old_hash" ] ; then
+  service mysql stop
+  # clear any binlogs
+  backupdir=/var/backups/binlogs-`date +%Y%m%d%H%M%S`
+  mkdir -p $backupdir
+  mv /var/log/mysql/mysql-bin* $backupdir || :
+  service mysql start
+fi
+
+
 dumpurl=http://$hostname/$dumpurl
-echo Stopping slave...
-mysql $ROOTARGS -e "STOP SLAVE"
-
-# Normally this will be empty anyway, but it will save our admin
-# if he accidentally relates a master with some other master!
-backup=/var/backups/alldbs-`date +%Y%m%d%H%M%S`.sql.gz
-mysqldump $ROOTARGS --all-databases --single-transaction |gzip> $backup
-
-mysql $ROOTARGS -e "RESET SLAVE"
-mysql $ROOTARGS -e "CHANGE MASTER TO MASTER_HOST='$hostname', MASTER_USER='$user', MASTER_PASSWORD='$password', MASTER_PORT=$port"
 echo Importing $dumpurl into MySQL
 curl --silent --show-error $dumpurl |zcat| mysql $ROOTARGS
 # Root pw gets overwritten by import
@@ -60,30 +88,15 @@ socket=/var/run/mysqld/mysqld.sock
 basedir=/usr
 EOF
 
-if [ -z "$serverid" ] ; then
-  serverid=`echo $user | cut -d/ -f2`
-fi
-# add 100000 to server_id to avoid conflicts w/ masters
-serverid=$(($serverid+100000))
-if [ -f /etc/mysql/conf.d/slave.cf ] ; then
-    old_hash=`md5sum /etc/mysql/conf.d/slave.cf`
-else
-    old_hash="xxx"
-fi
-cat > /etc/mysql/conf.d/binlog.cnf <<EOF
-[mysqld]
-server-id = $serverid
-log_bin = /var/log/mysql/mysql-bin.log
-EOF
-new_hash=`md5sum /etc/mysql/conf.d/binlog.cnf`
-if [ "$new_hash" != "$old_hash" ] ; then
-  service mysql stop
-  # clear any binlogs
-  backupdir=/var/backups/binlogs-`date +%Y%m%d%H%M%S`
-  mkdir -p $backupdir
-  mv /var/log/mysql/mysql-bin* $backupdir || :
-  service mysql start
-fi
+
+echo Stopping slave...
+mysql $ROOTARGS -e "STOP SLAVE"  # || echo 'INFO: Failed to stop slave, but we do not care at all!'
+# Normally this will be empty anyway, but it will save our admin
+# if he accidentally relates a master with some other master!
+backup=/var/backups/alldbs-`date +%Y%m%d%H%M%S`.sql.gz
+mysqldump $ROOTARGS --all-databases --single-transaction |gzip> $backup
+mysql $ROOTARGS -e "RESET SLAVE"  # || echo 'INFO: Failed to reset slave, but we do not care at all!'
+mysql $ROOTARGS -e "CHANGE MASTER TO MASTER_HOST='$hostname', MASTER_USER='$user', MASTER_PASSWORD='$password', MASTER_PORT=$port"
 mysql $ROOTARGS -e "START SLAVE"
 mysql $ROOTARGS -e "SHOW SLAVE STATUS"
 touch /var/lib/juju/i.am.a.slave
