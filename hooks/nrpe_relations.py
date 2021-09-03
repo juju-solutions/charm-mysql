@@ -7,6 +7,8 @@ import MySQLdb
 from charmhelpers.core.hookenv import (
     log,
     relations_of_type,
+    relation_ids,
+    relation_set,
     Hooks, UnregisteredHookError
 )
 from charmhelpers.contrib.charmsupport.nrpe import NRPE
@@ -75,6 +77,13 @@ def update_nrpe_checks():
         check_cmd='check_mysql -u nagios -p {}'.format(nagios_password())
     )
     nrpe.write()
+    # request CPU governor check from nrpe relation to be performance
+    relid = relation_ids('nrpe-external-master')
+    rel_settings = {
+            'requested_cpu_governor': 'performance',
+            }
+    for rid in relation_ids("nrpe-external-master"):
+        relation_set(relation_id=rid, relation_settings=rel_settings)
 
 
 @hooks.hook('nrpe-external-master-relation-changed')
