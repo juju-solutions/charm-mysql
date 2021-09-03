@@ -78,11 +78,10 @@ def update_nrpe_checks():
     )
     nrpe.write()
     # request CPU governor check from nrpe relation to be performance
-    relid = relation_ids('nrpe-external-master')
     rel_settings = {
             'requested_cpu_governor': 'performance',
             }
-    for rid in relation_ids("nrpe-external-master"):
+    for rid in relation_ids('nrpe-external-master'):
         relation_set(relation_id=rid, relation_settings=rel_settings)
 
 
