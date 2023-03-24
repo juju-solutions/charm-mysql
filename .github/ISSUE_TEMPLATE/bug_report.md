@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Let the people know this repo is deprecated
+about: Issues with the deprecated mysql charm
 title: ''
 labels: ''
 assignees: ''
