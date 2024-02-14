@@ -256,7 +256,7 @@ targets = {os.path.join(target_prefix, 'binlog.cnf'): binlog_cnf,
            }
 
 need_restart = False
-for target,content in targets.iteritems():
+for target,content in targets.items():
     tdir = os.path.dirname(target)
     if len(content) == 0 and os.path.exists(target):
         os.unlink(target)

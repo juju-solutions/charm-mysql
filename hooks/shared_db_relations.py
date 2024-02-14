@@ -9,6 +9,7 @@
 
 import subprocess
 import json
+from collections import defaultdict
 import lib.utils as utils
 import lib.cluster_utils as cluster
 
@@ -33,8 +34,7 @@ def relation_get():
 
 def unit_sorted(units):
     """Return a sorted list of unit names."""
-    return sorted(
-        units, lambda a, b: cmp(int(a.split('/')[-1]), int(b.split('/')[-1])))
+    return sorted(units, lambda name: int(name.split('/')[-1]))
 
 
 def get_unit_addr(relid, unitid):
@@ -109,12 +109,9 @@ def shared_db_changed():
         #    }
         # }
         #
-        databases = {}
-        for k, v in settings.iteritems():
-            db = k.split('_')[0]
-            x = '_'.join(k.split('_')[1:])
-            if db not in databases:
-                databases[db] = {}
+        databases = defaultdict(dict)
+        for k, v in settings.items():
+            db, x = k.split('_', 1)
             databases[db][x] = v
 
         return_data = {}
