@@ -1,6 +1,9 @@
 # DEPRECATION NOTICE
 
-This repo is home to a hook-based charm from a simpler time. Source for the currently supported [mysql charm](https://charmhub.io/mysql) can be found in the [mysql-operator repo](https://github.com/canonical/mysql-operator).  Issues should be raised there.
+This repository is deprecated. 
+
+Please for the [mysql (machine charm)](https://charmhub.io/mysql) report issues on [mysql-operator repo](https://github.com/canonical/mysql-operator)
+For [mysql (machine charm)](https://charmhub.io/mysql-k8s) report issues on [mysql-operator repo](https://github.com/canonical/mysql-k8s-operator)
 
 This repo is now archived and remains for historical purposes only.
 
