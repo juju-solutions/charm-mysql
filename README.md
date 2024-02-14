@@ -1,3 +1,14 @@
+# DEPRECATION NOTICE
+
+This charm has been superseded by `Charmed MySQL` (machine charm) and `Charmed MySQL K8s` (k8s charm).
+
+- For [Charmed MySQL](https://charmhub.io/mysql), please report issues in the [mysql-operator repo](https://github.com/canonical/mysql-operator).
+- For [Charmed MySQL K8s](https://charmhub.io/mysql-k8s), please report issues in the [mysql-k8s-operator repo](https://github.com/canonical/mysql-k8s-operator).
+
+This repo is now archived and remains for historical purposes only.
+
+-----
+
 # Overview
 
 [MySQL](http://www.mysql.com) is a fast, stable and true multi-user, multi-threaded SQL database server. SQL (Structured Query Language) is the most popular database query language in the world. The main goals of MySQL are speed, robustness and ease of use.
