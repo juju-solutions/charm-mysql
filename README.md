@@ -1,3 +1,11 @@
+# DEPRECATION NOTICE
+
+This repo is home to a hook-based charm from a simpler time. Source for the currently supported [mysql charm](https://charmhub.io/mysql) can be found in the [mysql-operator repo](https://github.com/canonical/mysql-operator).  Issues should be raised there.
+
+This repo is now archived and remains for historical purposes only.
+
+-----
+
 # Overview
 
 [MySQL](http://www.mysql.com) is a fast, stable and true multi-user, multi-threaded SQL database server. SQL (Structured Query Language) is the most popular database query language in the world. The main goals of MySQL are speed, robustness and ease of use.
