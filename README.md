@@ -1,9 +1,9 @@
 # DEPRECATION NOTICE
 
-This repository is deprecated. 
+This charm has been superseded by `Charmed MySQL` (machine charm) and `Charmed MySQL K8s` (k8s charm).
 
-Please for the [mysql (machine charm)](https://charmhub.io/mysql) report issues on [mysql-operator repo](https://github.com/canonical/mysql-operator)
-For [mysql (machine charm)](https://charmhub.io/mysql-k8s) report issues on [mysql-operator repo](https://github.com/canonical/mysql-k8s-operator)
+- For [Charmed MySQL](https://charmhub.io/mysql), please report issues in the [mysql-operator repo](https://github.com/canonical/mysql-operator).
+- For [Charmed MySQL K8s](https://charmhub.io/mysql-k8s), please report issues in the [mysql-k8s-operator repo](https://github.com/canonical/mysql-k8s-operator).
 
 This repo is now archived and remains for historical purposes only.
 
